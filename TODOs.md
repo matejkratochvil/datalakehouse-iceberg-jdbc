@@ -29,7 +29,6 @@ docker compose exec controller trino
       - create simple streaming source (like folder watcher or sth., mock kafka if there is an easy way?)
       - read the stream, write in minio as iceberg table
       - (read the iceberg table from minio in streaming fashion?)
-      - !!! Issues with the java flink job, need to check the logs, data not visible with Trino.
    - c. add flink python-api example usage, similar to b.
 2. add spark master/worker to docker-compose
    - a. setup iceberg as spark catalog
