@@ -30,10 +30,14 @@ docker-compose up -d
    * **JupyterLab:** [http://localhost:8888](http://localhost:8888) (Token: `icebergrocks`)
      * Navigate to the `work/` directory to find the notebooks.
    * **PostgreSQL:** Can be accessed on `localhost:5432` (Credentials: `iceberg`/`icebergpassword`, Database: `iceberg_catalog`)
+   * **Flink UI:** [http://localhost:8081](http://localhost:8081)
 
 4. **Run the Jupyter Notebook:**
    * Open `01-trino-iceberg-getting-started.ipynb` in JupyterLab.
    * Execute the cells to create schemas, tables, insert data, and query using Trino.
+
+5. **Run the Java Flink Application:**
+   * Navigate to `flink/java-app-example/` and build/deploy the Flink application using UI. TODO: needs to be debugged
 
 ## Teardown
 

@@ -24,7 +24,7 @@ plugins {
 }
 
 group "io.iceberg.flink.lor.example"
-version "0.0.2"
+version "0.0.1"
 mainClassName = 'io.iceberg.flink.lor.example.LORSink'
 description = "Streaming randomly generated Lord of the Rings data to a Tabular table using Flink"
 
