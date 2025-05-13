@@ -18,6 +18,8 @@
  */
 package io.iceberg.flink.lor.example;
 
+import java.io.FileNotFoundException;
+import java.io.InputStream;
 import java.util.HashMap;
 import java.util.Map;
 import org.apache.flink.api.java.utils.ParameterTool;
@@ -43,40 +45,52 @@ public class LORSink {
   private static final Logger LOGGER = LoggerFactory.getLogger(LORSink.class);
 
   public static void main(String[] args) throws Exception {
-    ParameterTool parameters = ParameterTool.fromArgs(args);
+    InputStream inputStream = Thread.currentThread()
+    .getContextClassLoader()
+    .getResourceAsStream("config.properties");
+
+    if (inputStream == null) {
+        throw new FileNotFoundException("config.properties not found in classpath");
+    }
+
+    ParameterTool fileParams = ParameterTool.fromPropertiesFile(inputStream);
+    ParameterTool cliParams = ParameterTool.fromArgs(args);
+    ParameterTool parameters = fileParams.mergeWith(cliParams);
+
     System.out.println("Parsed parameters:");
     parameters.toMap().forEach((k, v) -> System.out.println(k + " = " + v));
 
     Configuration hadoopConf = new Configuration();
 
     // Set AWS credentials (must beset using System properties, check why)
-    System.setProperty("aws.region", parameters.get("aws-region", "eu-central-1"));
-    System.setProperty("aws.accessKeyId", parameters.get("aws-access-key", "admin"));
-    System.setProperty("aws.secretAccessKey", parameters.get("aws-secret-key", "password"));
+    System.setProperty("aws.region", parameters.get("aws-region"));
+    System.setProperty("aws.accessKeyId", parameters.get("aws-access-key"));
+    System.setProperty("aws.secretAccessKey", parameters.get("aws-secret-key"));
 
     Map<String, String> catalogProperties = new HashMap<>();
 
     // JDBC Catalog settings
-    catalogProperties.put("type", "iceberg");
-    catalogProperties.put("catalog-type", "jdbc");
-    catalogProperties.put("uri", parameters.get("uri", "jdbc:postgresql://postgres_catalog:5432/iceberg_catalog"));
-    catalogProperties.put("jdbc.user", parameters.get("jdbc-user", "iceberg"));
-    catalogProperties.put("jdbc.password", parameters.get("jdbc-password", "icebergpassword"));
-    catalogProperties.put("warehouse", parameters.get("warehouse", "s3a://iceberg-warehouse/"));
+    catalogProperties.put("type", parameters.get("type"));
+    catalogProperties.put("catalog-type", parameters.get("catalog-type"));
+    catalogProperties.put("catalog-name", parameters.get("catalog-name"));
+    catalogProperties.put("uri", parameters.get("uri"));
+    catalogProperties.put("jdbc.user", parameters.get("jdbc-user"));
+    catalogProperties.put("jdbc.password", parameters.get("jdbc-password"));
+    catalogProperties.put("warehouse", parameters.get("warehouse"));
 
     // S3 and MinIO settings
-    catalogProperties.put("io-impl", parameters.get("io-impl", "org.apache.iceberg.aws.s3.S3FileIO"));
-    catalogProperties.put("aws.region", parameters.get("aws-region", "eu-central-1"));
-    catalogProperties.put("aws.access-key-id", parameters.get("aws-access-key", "admin"));
-    catalogProperties.put("aws.secret-access-key", parameters.get("aws-secret-key", "password"));
-    catalogProperties.put("s3.endpoint", parameters.get("s3-endpoint", "http://minio:9000"));
-    catalogProperties.put("s3.path-style-access", parameters.get("s3-path-style-access", "true"));
+    catalogProperties.put("io-impl", parameters.get("io-impl"));
+    catalogProperties.put("aws.region", parameters.get("aws-region"));
+    catalogProperties.put("aws.access-key-id", parameters.get("aws-access-key"));
+    catalogProperties.put("aws.secret-access-key", parameters.get("aws-secret-key"));
+    catalogProperties.put("s3.endpoint", parameters.get("s3-endpoint"));
+    catalogProperties.put("s3.path-style-access", parameters.get("s3-path-style-access"));
 
     CatalogLoader catalogLoader = CatalogLoader.custom(
-        "iceberg",
+        parameters.get("catalog-name"),
         catalogProperties,
         hadoopConf,
-        parameters.get("catalog-impl", "org.apache.iceberg.jdbc.JdbcCatalog"));
+        parameters.get("catalog-impl"));
     Schema schema = new Schema(
         Types.NestedField.required(1, "character", Types.StringType.get()),
         Types.NestedField.required(2, "location", Types.StringType.get()),
