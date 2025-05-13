@@ -22,13 +22,6 @@
 This demo extends the Iceberg demo setup to include Flink. Included is a standalone Flink application that generates random Lord of the Rings
 records and streams them into an Iceberg table using Flink.
 
-Clone this repository, change into the `flink-example` directory, and start up the docker environment.
-```sh
-git clone git@github.com:tabular-io/docker-spark-iceberg.git
-cd flink-example
-docker compose up
-```
-
 Build the Flink application.
 ```
 ./gradlew clean shadowJar
