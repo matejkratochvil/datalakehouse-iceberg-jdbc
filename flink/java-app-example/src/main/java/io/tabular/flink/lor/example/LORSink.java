@@ -59,7 +59,7 @@ public class LORSink {
     // JDBC Catalog settings
     catalogProperties.put("type", "iceberg");
     catalogProperties.put("catalog-type", "jdbc");
-    catalogProperties.put("uri", parameters.get("uri", "jdbc:postgresql://host.docker.internal:5432/iceberg_catalog"));
+    catalogProperties.put("uri", parameters.get("uri", "jdbc:postgresql://postgres_catalog:5432/iceberg_catalog"));
     catalogProperties.put("jdbc.user", parameters.get("jdbc-user", "iceberg"));
     catalogProperties.put("jdbc.password", parameters.get("jdbc-password", "icebergpassword"));
     catalogProperties.put("warehouse", parameters.get("warehouse", "s3a://iceberg-warehouse/"));
@@ -69,11 +69,11 @@ public class LORSink {
     catalogProperties.put("aws.region", parameters.get("aws-region", "eu-central-1"));
     catalogProperties.put("aws.access-key-id", parameters.get("aws-access-key", "admin"));
     catalogProperties.put("aws.secret-access-key", parameters.get("aws-secret-key", "password"));
-    catalogProperties.put("s3.endpoint", parameters.get("s3-endpoint", "http://host.docker.internal:9000"));
+    catalogProperties.put("s3.endpoint", parameters.get("s3-endpoint", "http://minio:9000"));
     catalogProperties.put("s3.path-style-access", parameters.get("s3-path-style-access", "true"));
 
     CatalogLoader catalogLoader = CatalogLoader.custom(
-        "demo",
+        "iceberg",
         catalogProperties,
         hadoopConf,
         parameters.get("catalog-impl", "org.apache.iceberg.jdbc.JdbcCatalog"));
