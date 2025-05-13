@@ -1,11 +1,14 @@
-FROM flink:1.16-scala_2.12
+FROM flink:1.20.1-scala_2.12-java11
 
-# Download and copy necessary JARs
-RUN wget -P /opt/flink/lib/ \
-    https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-flink-runtime-1.16/1.3.1/iceberg-flink-runtime-1.16-1.3.1.jar \
-    https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.6/hadoop-aws-3.3.6.jar \
-    https://repo1.maven.org/maven2/com/amazonaws/aws-java-sdk-bundle/1.12.681/aws-java-sdk-bundle-1.12.681.jar \
-    https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar
+ARG ICEBERG_VERSION=1.9.0
 
-# Copy Flink configuration file
-COPY flink-conf.yaml /opt/flink/conf/flink-conf.yaml
+RUN mkdir -p /opt/flink/usrlib \
+ && wget -P /opt/flink/usrlib \
+      https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-flink-runtime-1.20/${ICEBERG_VERSION}/iceberg-flink-runtime-1.20-${ICEBERG_VERSION}.jar \
+      https://repo1.maven.org/maven2/org/apache/iceberg/iceberg-aws-bundle/${ICEBERG_VERSION}/iceberg-aws-bundle-${ICEBERG_VERSION}.jar \
+ && wget -P /opt/flink/lib \
+      https://repo1.maven.org/maven2/org/apache/hadoop/hadoop-aws/3.3.6/hadoop-aws-3.3.6.jar \
+      https://repo1.maven.org/maven2/org/postgresql/postgresql/42.7.3/postgresql-42.7.3.jar \
+ && rm -f /opt/flink/lib/aws-*.jar /opt/flink/lib/awssdk-*.jar
+
+COPY flink-conf.yaml /opt/flink/conf/
