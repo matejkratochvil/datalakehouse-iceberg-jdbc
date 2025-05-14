@@ -35,7 +35,7 @@ services:
       "
     networks:
       - datalakehouse_network
-      
+
   postgres:
     image: postgres:15
     container_name: postgres_catalog
@@ -72,29 +72,106 @@ services:
     networks:
       - datalakehouse_network
 
-  jupyterlab:
-    image: quay.io/jupyter/scipy-notebook:python-3.12.10
-    container_name: jupyterlab
+# --- Spark Services ---
+  spark-master:
+    image: bitnami/spark:3.5.3 # Using a Bitnami Spark image for convenience, includes Hadoop client
+    container_name: spark-master
     ports:
-      - "8888:8888"
+      - "8081:8080"  # Spark Master Web UI
+      - "7077:7077"  # Spark Master RPC
+    environment:
+      - SPARK_MODE=master
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_SUBMIT_ARGS=--packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.9.0
+    volumes:
+      - ./config/spark/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      # - ./notebooks:/opt/bitnami/spark/work-dir/notebooks # For Spark to access notebooks if needed (e.g. for spark-submit)
+      - ./jars:/opt/bitnami/spark/jars/custom # For custom jars if needed
+    depends_on:
+      minio:
+        condition: service_healthy
+      postgres:
+        condition: service_healthy
+    networks:
+      - datalakehouse_network
+
+  spark-worker:
+    image: bitnami/spark:3.5.3
+    container_name: spark-worker-1
+    environment:
+      - SPARK_MODE=worker
+      - SPARK_MASTER_URL=spark://spark-master:7077 # Connect to the Spark master
+      - SPARK_WORKER_MEMORY=2G
+      - SPARK_WORKER_CORES=2
+      - SPARK_RPC_AUTHENTICATION_ENABLED=no
+      - SPARK_RPC_ENCRYPTION_ENABLED=no
+      - SPARK_LOCAL_STORAGE_ENCRYPTION_ENABLED=no
+      - SPARK_SSL_ENABLED=no
+      - SPARK_SUBMIT_ARGS=--packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.9.0
+
+    volumes:
+      - ./config/spark/spark-defaults.conf:/opt/bitnami/spark/conf/spark-defaults.conf
+      - ./jars:/opt/bitnami/spark/jars/custom
+    depends_on:
+      - spark-master
+    networks:
+      - datalakehouse_network
+
+  jupyterlab:
+    build:
+      context: ./config/jupyterlab # Create a new directory for Jupyter Dockerfile
+      dockerfile: Dockerfile
+    container_name: jupyterlab
+    # image: quay.io/jupyter/pyspark-notebook:spark-3.5.3
+    # container_name: jupyterlab
+    ports:
+      - "8888:8888" # JupyterLab UI
+      - "4040:4040" # Spark UI for PySpark driver
+      - "4041:4041"
+      - "4042:4042"
     volumes:
       - ./notebooks:/home/jovyan/notebooks
-      - ./config:/home/jovyan/work/config # To access config files from notebook if needed
-      - ./s3data:/home/jovyan/work/s3data # To inspect MinIO data directly if needed
+      - ./config:/home/jovyan/work/config
+      - ./s3data:/home/jovyan/work/s3data
+      - ./jars:/home/jovyan/jars # Mount jars to be accessible by PySpark in Jupyter
     environment:
       JUPYTER_ENABLE_LAB: "yes"
       JUPYTER_TOKEN: "icebergrocks"
+      # Spark Configuration for PySpark in JupyterLab
+      # These will be used when a SparkSession is created in the notebook
+      PYSPARK_SUBMIT_ARGS: >-
+        --master spark://spark-master:7077
+        --conf spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
+        --conf spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkSessionCatalog
+        --conf spark.sql.catalog.spark_catalog.type=hive
+        --conf spark.sql.catalog.iceberg_jdbc.type=jdbc
+        --conf spark.sql.catalog.iceberg_jdbc.uri=jdbc:postgresql://postgres_catalog:5432/iceberg_catalog
+        --conf spark.sql.catalog.iceberg_jdbc.jdbc.user=iceberg
+        --conf spark.sql.catalog.iceberg_jdbc.jdbc.password=icebergpassword
+        --conf spark.sql.catalog.iceberg_jdbc.driver=org.postgresql.Driver
+        --conf spark.sql.catalog.iceberg_jdbc.warehouse=s3a://iceberg-warehouse/
+        --conf spark.hadoop.fs.s3a.endpoint=http://minio:9000
+        --conf spark.hadoop.fs.s3a.access.key=admin
+        --conf spark.hadoop.fs.s3a.secret.key=password
+        --conf spark.hadoop.fs.s3a.path.style.access=true
+        --conf spark.hadoop.fs.s3a.connection.ssl.enabled=false
+        --conf spark.driver.extraJavaOptions="-Daws.region=eu-central-1 -Daws.overrideDefaultRegion=true"
+        --conf spark.executor.extraJavaOptions="-Daws.region=eu-central-1 -Daws.overrideDefaultRegion=true"
+        --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.9.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.6.0
+        pyspark-shell
     depends_on:
       - trino-coordinator
       - minio
       - postgres
-    command: start-notebook.sh --NotebookApp.token='icebergrocks' --NotebookApp.password=''
+      - spark-master
     networks:
       - datalakehouse_network
 
 volumes:
   postgres_data:
-
 networks:
   datalakehouse_network:
     name: datalakehouse_network
