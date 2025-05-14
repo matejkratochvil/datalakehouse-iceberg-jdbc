@@ -24,7 +24,7 @@ docker compose exec controller trino
    - a. provide example DDL/DML trino statements for creating/populating iceberg tables (played with it locally a bit, will just take that and put it in some markdown or whatever)
    - b. add example iceberg statements (compaction etc.)
 1. add flink to docker-compose
-   - a. config iceberg with flink
+   - a. config iceberg with flink - DONE
    - b. add example flink job
       - create simple streaming source (like folder watcher or sth., mock kafka if there is an easy way?)
       - read the stream, write in minio as iceberg table

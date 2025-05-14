@@ -1,0 +1,28 @@
+# Flink basic config
+jobmanager.memory.process.size: 1024m
+taskmanager.numberOfTaskSlots: 4
+taskmanager.memory.process.size: 2048m
+
+# S3 config (used by Iceberg HadoopFileIO)
+fs.s3a.endpoint: http://minio:9000
+fs.s3a.access.key: admin
+fs.s3a.secret.key: password
+fs.s3a.path.style.access: true
+fs.s3a.connection.ssl.enabled: false
+fs.s3a.region: eu-central-1
+
+# Optional Hadoop file system fallback
+fs.default-scheme: s3a://iceberg-warehouse/
+
+# Optional: disable FS fallback behavior
+fs.hadoop.enabled: false
+fs.native-s3.enabled: true
+
+# Iceberg JDBC catalog configuration (used if creating via SQL)
+iceberg.catalog.type: jdbc
+iceberg.jdbc-catalog.driver-class: org.postgresql.Driver
+iceberg.jdbc-catalog.catalog-name: iceberg_catalog
+iceberg.jdbc-catalog.connection-url: jdbc:postgresql://postgres_catalog:5432/iceberg_catalog
+iceberg.jdbc-catalog.connection-user: iceberg
+iceberg.jdbc-catalog.connection-password: icebergpassword
+iceberg.jdbc-catalog.default-warehouse-dir: s3a://iceberg-warehouse/

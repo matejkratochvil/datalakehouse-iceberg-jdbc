@@ -92,6 +92,37 @@ services:
     networks:
       - datalakehouse_network
 
+  flink-jobmanager:
+    build: ./flink
+    container_name: flink-jobmanager
+    ports:
+      - "8081:8081"
+    command: jobmanager
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: flink-jobmanager  # TODO: needs to be set here, check why not from the conf file
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password
+      - AWS_REGION=us-east-1
+    networks:
+      - datalakehouse_network
+
+  flink-taskmanager:
+    build: ./flink
+    container_name: flink-taskmanager
+    command: taskmanager
+    scale: 1
+    environment:
+      - |
+        FLINK_PROPERTIES=
+        jobmanager.rpc.address: flink-jobmanager # TODO: needs to be set here, check why not from the conf file
+      - AWS_ACCESS_KEY_ID=admin
+      - AWS_SECRET_ACCESS_KEY=password
+      - AWS_REGION=us-east-1
+    networks:
+      - datalakehouse_network
+
 volumes:
   postgres_data:
 
