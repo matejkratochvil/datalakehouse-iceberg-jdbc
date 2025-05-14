@@ -2,7 +2,7 @@
 
 This project demonstrates a Docker Compose setup for a datalakehouse using Apache Iceberg.
 
-## Phase 1: Core Services**
+## Phase 1: Core Services
 
 * **MinIO:** S3-compatible object storage for Iceberg table data.
 * **PostgreSQL:** Stores Iceberg metadata using the JDBC catalog.
@@ -85,10 +85,17 @@ streams them into an Iceberg table using Flink. More information in `flink/java-
     docker exec -it flink-jobmanager bash -c "flink cancel f5467dbf8459b4f7f5c0df52ecbc4aa3"
     ```
 
-Next Steps
+TODO: update this readme
 
-* Add Spark service with Iceberg configuration.
-* Add Flink service with Iceberg configuration.
-* Develop more advanced examples for each engine.
+## Phase 2: Add Spark service with Iceberg configuration.
+   * **Spark standalone master-worker services**
+   * + examples
+
+## Phase 3: Add Flink service with Iceberg configuration.
+   * **Flink JobManager-TaskManager services**
+   * + java example + pyflink script
+
+TODO: 
+Add pyiceberg examples
 
 ---

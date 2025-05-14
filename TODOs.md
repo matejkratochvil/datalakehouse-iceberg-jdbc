@@ -25,8 +25,8 @@ docker compose exec controller trino
 2. add flink to docker-compose
    - a. config iceberg with flink - DONE
    - b. add example flink job
-      - create simple streaming source (like folder watcher or sth., mock kafka if there is an easy way?)
-      - read the stream, write in minio as iceberg table
+      - create simple streaming source (like folder watcher or sth., mock kafka if there is an easy way?) - WON'T DO
+      - read the stream, write in minio as iceberg table - WON'T DO
       - (read the iceberg table from minio in streaming fashion?)
    - c. add flink python-api example usage, similar to b.
 
@@ -36,6 +36,6 @@ docker compose exec controller trino
 
 4. install jupyterlab (either as another service in docker-compose or in some image from steps 0., 1., 2.)
 
-### todo
+### TODO
 
 5. pyiceberg examples (load_catalog, etc.) and read/write with pyarrow/pandas
