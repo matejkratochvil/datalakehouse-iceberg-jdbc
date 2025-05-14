@@ -616,7 +616,7 @@ Changes and Additions:
 
 * Update docker-compose.yml: Add Spark master and worker services. Configure Spark to use the Iceberg SQL extensions and connect to the JDBC catalog and MinIO.
 * Spark Configuration Files:
-  * spark-defaults.conf: For default Spark configurations related to Iceberg.
+  * `spark-defaults.conf`: For default Spark configurations related to Iceberg.
   * Potentially environment variables in docker-compose.yml for Spark.
 * New Jupyter Notebook (02-spark-iceberg-examples.ipynb): For Spark-specific DDL, DML, and Iceberg feature demonstrations.
 
@@ -626,7 +626,7 @@ Let's detail these steps.
 
 We'll add a Spark master and a Spark worker. For simplicity in this example, we'll embed the necessary Iceberg and S3/PostgreSQL Jars directly by specifying them in Spark's configuration. In a production setup, you might build a custom Spark image or use a Kubernetes-based deployment.
 
-```
+```yaml
 services:
   minio:
     image: minio/minio:RELEASE.2023-05-04T21-44-30Z
@@ -866,7 +866,7 @@ This notebook will contain PySpark code to interact with Iceberg.
 
 * File: notebooks/02-spark-iceberg-examples.ipynb
 
-```
+```py
 # Cell 1: Import PySpark and Create SparkSession
 # The SparkSession should be automatically configured by PYSPARK_SUBMIT_ARGS
 # defined in docker-compose.yml for the jupyterlab service.
@@ -1236,7 +1236,7 @@ Flink requires specific JAR files for Iceberg integration, S3 access (MinIO), an
 
 We'll add Flink JobManager, TaskManager, and modify JupyterLab to install PyFlink.
 
-```
+```yaml
 services:
   minio:
     image: minio/minio:RELEASE.2023-05-04T21-44-30Z
@@ -1335,7 +1335,7 @@ services:
 
   # --- Flink Services ---
   flink-jobmanager:
-    image: flink:1.18.1-scala_2.12-java11 # Using Flink 1.18.1
+    image: flink:1.20.1-scala_2.12-java17 # Using Flink 1.18.1
     container_name: flink-jobmanager
     ports:
       - "8088:8081"  # Flink Web UI (Note: Spark Master UI is on 8081, so Flink UI is on 8088)
@@ -1363,7 +1363,7 @@ services:
       - datalakehouse_network
 
   flink-taskmanager:
-    image: flink:1.18.1-scala_2.12-java11
+    image: flink:1.20.1-scala_2.12-java17
     container_name: flink-taskmanager-1
     command: taskmanager
     environment:
@@ -1421,7 +1421,7 @@ services:
         --conf spark.hadoop.fs.s3a.connection.ssl.enabled=false
         --conf spark.driver.extraJavaOptions="-Daws.region=us-east-1 -Daws.overrideDefaultRegion=true"
         --conf spark.executor.extraJavaOptions="-Daws.region=us-east-1 -Daws.overrideDefaultRegion=true"
-        --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.6.0
+        --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.9.0,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.6.0
         pyspark-shell
       # For PyFlink to find the downloaded JARs, if needed by local mini-cluster
       # FLINK_HOME: /opt/flink # If PyFlink needs it
