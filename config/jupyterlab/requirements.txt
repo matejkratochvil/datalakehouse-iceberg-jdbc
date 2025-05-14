@@ -1,0 +1,6 @@
+pyiceberg[pyarrow,duckdb,pandas]
+pandas
+trino
+sqlalchemy
+pyarrow
+pyspark==3.5.3
