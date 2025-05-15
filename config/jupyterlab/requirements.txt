@@ -1,4 +1,4 @@
-pyiceberg[pyarrow,duckdb,pandas]
+pyiceberg[pyarrow,duckdb,pandas,sql-postgres,s3fs]
 pandas
 trino
 sqlalchemy
