@@ -4,3 +4,4 @@ trino
 sqlalchemy
 pyarrow
 pyspark==3.5.3
+minio

@@ -1,2 +1,5 @@
 s3data/
 .ipynb_checkpoints/
+metastore_db/
+Elspotprices*
+*.parquet
