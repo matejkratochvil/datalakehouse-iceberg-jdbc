@@ -3,3 +3,4 @@ s3data/
 metastore_db/
 Elspotprices*
 *.parquet
+.vscode
