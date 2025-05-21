@@ -42,7 +42,7 @@ Iceberg tables support table properties to configure table behavior.
 | `write.metadata.delete-after-commit.enabled` | Boolean                        | False                      | Whether to automatically delete old *tracked* metadata files after each table commit. It will retain a number of the most recent metadata files, which can be set using property `write.metadata.previous-versions-max`. |
 | `write.object-storage.enabled`           | Boolean                            | False                      | Enables the [`ObjectStoreLocationProvider`](#object-store-location-provider) that adds a hash component to file paths. |
 | `write.object-storage.partitioned-paths` | Boolean                            | True                       | Controls whether [partition values are included in file paths](#partition-exclusion) when object storage is enabled    |
-| `write.py-location-provider.impl`        | String of form `module.ClassName`  | null                       | Optional, custom `LocationProvider`] implementation                                          |
+| `write.py-location-provider.impl`        | String of form `module.ClassName`  | null                       | Optional, custom `LocationProvider` implementation                                          |
 | `write.data.path`                        | String pointing to location        | `{metadata.location}/data` | Sets the location under which data is written.                                               |
 | `write.metadata.path`                    | String pointing to location        | `{metadata.location}/metadata` | Sets the location under which metadata is written.                                       |
 
@@ -117,7 +117,7 @@ The `SimpleLocationProvider` provides paths prefixed by `{location}/data/`, wher
 
 For example, a non-partitioned table might have a data file with location:
 
-```txt
+```yaml
 s3://bucket/ns/table/data/0000-0-5affc076-96a4-48f2-9cd2-d5efbc9f0c94-00001.parquet
 ```
 
@@ -125,7 +125,7 @@ When the table is partitioned, files under a given partition are grouped into a 
 and value as the directory name - this is known as the *Hive-style* partition path format. For example, a table
 partitioned over a string column `category` might have a data file with location:
 
-```txt
+```yaml
 s3://bucket/ns/table/data/category=orders/0000-0-5affc076-96a4-48f2-9cd2-d5efbc9f0c94-00001.parquet
 ```
 

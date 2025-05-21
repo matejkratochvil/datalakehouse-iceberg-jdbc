@@ -77,7 +77,7 @@ services:
     image: bitnami/spark:3.5.3 # Using a Bitnami Spark image for convenience, includes Hadoop client
     container_name: spark-master
     ports:
-      - "8081:8080"  # Spark Master Web UI
+      - "8088:8080"  # Spark Master Web UI
       - "7077:7077"  # Spark Master RPC
     environment:
       - SPARK_MODE=master
@@ -182,7 +182,7 @@ services:
         jobmanager.rpc.address: flink-jobmanager  # TODO: needs to be set here, check why not from the conf file
       - AWS_ACCESS_KEY_ID=admin
       - AWS_SECRET_ACCESS_KEY=password
-      - AWS_REGION=us-east-1
+      - AWS_REGION=eu-central-1
     networks:
       - datalakehouse_network
 
@@ -197,7 +197,7 @@ services:
         jobmanager.rpc.address: flink-jobmanager # TODO: needs to be set here, check why not from the conf file
       - AWS_ACCESS_KEY_ID=admin
       - AWS_SECRET_ACCESS_KEY=password
-      - AWS_REGION=us-east-1
+      - AWS_REGION=eu-central-1
     networks:
       - datalakehouse_network
 

@@ -1,6 +1,7 @@
-pyiceberg[pyarrow,duckdb,pandas]
+pyiceberg[pyarrow,duckdb,pandas,sql-postgres,s3fs]
 pandas
 trino
 sqlalchemy
 pyarrow
 pyspark==3.5.3
+minio
