@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Data Lakehouse Report</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; background-color: #FDFBF6; color: #4A4A4A; }
+        .sidebar { background-color: #FFFFFF; border-right: 1px solid #D5DBDB; }
+        .sidebar a { color: #2C3E50; border-left: 3px solid transparent; }
+        .sidebar a.active, .sidebar a:hover { color: #5DADE2; border-left-color: #5DADE2; background-color: #FDFBF6; }
+        .content-section { background-color: #FFFFFF; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+        h1, h2, h3 { color: #2C3E50; }
+        .accent-blue { color: #5DADE2; }
+        .accent-teal { color: #76D7C4; }
+        .border-accent-blue { border-color: #5DADE2; }
+        .bg-accent-blue-light { background-color: #EBF5FB; }
+        .bg-accent-teal-light { background-color: #E8F8F5; }
+        .chart-container { position: relative; width: 100%; max-width: 600px; margin-left: auto; margin-right: auto; height: 350px; max-height: 400px; }
+        @media (max-width: 768px) { .chart-container { height: 300px; max-height: 350px; } }
+        .code-block { background-color: #2C3E50; color: #FDFBF6; padding: 1rem; border-radius: 0.375rem; font-family: monospace; overflow-x: auto; }
+        .diagram-box { border: 2px solid #76D7C4; padding: 0.75rem; border-radius: 0.375rem; text-align: center; background-color: #FFFFFF; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+        .diagram-arrow { font-size: 1.5rem; color: #5DADE2; margin: 0 0.5rem; }
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltiptext { visibility: hidden; width: 200px; background-color: #2C3E50; color: #fff; text-align: center; border-radius: 6px; padding: 5px 0; position: absolute; z-index: 1; bottom: 125%; left: 50%; margin-left: -100px; opacity: 0; transition: opacity 0.3s; font-size: 0.875rem; }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
+        .tab-button { background-color: #EBF5FB; color: #2C3E50; padding: 0.5rem 1rem; border-radius: 0.375rem 0.375rem 0 0; cursor: pointer; border: 1px solid #D5DBDB; border-bottom: none; margin-right: 0.25rem;}
+        .tab-button.active { background-color: #5DADE2; color: white; border-color: #5DADE2;}
+        .tab-content { border: 1px solid #D5DBDB; padding: 1rem; border-radius: 0 0.375rem 0.375rem; }
+        .collapsible-header { cursor: pointer; padding: 0.5rem; background-color: #E8F8F5; border-radius: 0.25rem; margin-bottom: 0.25rem; }
+        .collapsible-content { display: none; padding: 0.5rem; border: 1px solid #D5DBDB; border-top: none; border-radius: 0 0 0.25rem 0.25rem; }
+    </style>
+</head>
+<body class="flex flex-col md:flex-row min-h-screen">
+
+    <nav id="sidebarNav" class="sidebar w-full md:w-64 lg:w-72 p-4 space-y-2 sticky top-0 h-screen overflow-y-auto md:block hidden">
+        <h1 class="text-2xl font-bold mb-6">Data Lakehouse Explorer</h1>
+        <a href="#section-intro" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-100 active">Introduction</a>
+        <a href="#section-core-tech" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-100">Core Technologies</a>
+        <a href="#section-architecture" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-100">System Architecture</a>
+        <a href="#section-phased-impl" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-100">Phased Implementation</a>
+        <a href="#section-catalog-comparison" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-100">Catalog Comparison</a>
+        <a href="#section-iceberg-ops" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-100">Iceberg Operations</a>
+        <a href="#section-advanced-features" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-100">Advanced Features</a>
+        <a href="#section-deployment" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-100">Deployment & Best Practices</a>
+        <a href="#section-conclusion" class="block py-2.5 px-4 rounded transition duration-200 hover:bg-gray-100">Conclusion</a>
+    </nav>
+    
+    <button id="mobileNavToggle" class="md:hidden fixed top-4 left-4 z-20 p-2 bg-white rounded shadow">
+        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke-width="1.5" stroke="currentColor" class="w-6 h-6">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5" />
+        </svg>
+    </button>
+
+
+    <main class="flex-1 p-4 md:p-8 lg:p-10 space-y-12 overflow-y-auto">
+
+        <section id="section-intro" class="content-section p-6 md:p-8">
+            <h2 class="text-3xl font-semibold mb-4">Welcome to the Interactive Data Lakehouse Report</h2>
+            <p class="mb-4 text-lg">This application translates the comprehensive "Building a Modern Data Lakehouse" report into an interactive experience. The original report details the construction of a Dockerized environment showcasing Apache Iceberg with Polaris and Gravitino catalogs, MinIO storage, Spark processing, and PyIceberg interaction.</p>
+            <p class="mb-2">The modern data landscape demands architectures that are flexible, scalable, and capable of handling diverse analytical workloads. The data lakehouse paradigm, merging the benefits of data lakes and data warehouses, has emerged as a leading solution. Apache Iceberg, an open table format, is a cornerstone of this paradigm, offering ACID transactions, schema evolution, and time travel capabilities on top of data lake storage.</p>
+            <p>Navigate through the sections to explore core technologies, system architecture, implementation phases, catalog comparisons, Iceberg operations, advanced features, and deployment best practices.</p>
+        </section>
+
+        <section id="section-core-tech" class="content-section p-6 md:p-8">
+            <h2 class="text-3xl font-semibold mb-6">Core Technologies Overview</h2>
+            <p class="mb-6">The data lakehouse built in the report leverages several key open-source technologies. Each plays a crucial role in creating a robust and flexible data platform. Understanding these components is essential to grasping the overall architecture and its capabilities.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                <div class="p-4 rounded-lg bg-accent-blue-light">
+                    <h3 class="text-xl font-semibold mb-2 accent-blue">Apache Iceberg</h3>
+                    <p class="text-sm">An open table format for huge analytic datasets, providing ACID transactions, schema evolution, and time travel on data lakes.</p>
+                </div>
+                <div class="p-4 rounded-lg bg-accent-teal-light">
+                    <h3 class="text-xl font-semibold mb-2 accent-teal">Apache Polaris</h3>
+                    <p class="text-sm">An incubating open-source, fully-featured REST catalog for Apache Iceberg, enabling multi-engine interoperability.</p>
+                </div>
+                <div class="p-4 rounded-lg bg-accent-blue-light">
+                    <h3 class="text-xl font-semibold mb-2 accent-blue">Apache Gravitino</h3>
+                    <p class="text-sm">An incubating universal metadata system that can provide an Iceberg REST catalog service, aiming for unified metadata management.</p>
+                </div>
+                <div class="p-4 rounded-lg bg-accent-teal-light">
+                    <h3 class="text-xl font-semibold mb-2 accent-teal">MinIO</h3>
+                    <p class="text-sm">A high-performance, S3-compatible object storage service, serving as the data lake storage layer.</p>
+                </div>
+                <div class="p-4 rounded-lg bg-accent-blue-light">
+                    <h3 class="text-xl font-semibold mb-2 accent-blue">Apache Spark</h3>
+                    <p class="text-sm">A unified analytics engine for large-scale data processing, used for DDL, DML, and advanced operations on Iceberg tables.</p>
+                </div>
+                <div class="p-4 rounded-lg bg-accent-teal-light">
+                    <h3 class="text-xl font-semibold mb-2 accent-teal">PyIceberg</h3>
+                    <p class="text-sm">A Python library for Python-native DDL, DML, and metadata operations on Iceberg tables.</p>
+                </div>
+                <div class="p-4 rounded-lg bg-accent-blue-light md:col-span-2 lg:col-span-1">
+                    <h3 class="text-xl font-semibold mb-2 accent-blue">JupyterLab & Docker</h3>
+                    <p class="text-sm">JupyterLab provides an interactive development environment, while Docker & Docker Compose manage the containerized application stack.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-architecture" class="content-section p-6 md:p-8">
+            <h2 class="text-3xl font-semibold mb-6">System Architecture Visualization</h2>
+            <p class="mb-6">The data lakehouse comprises several interconnected components. This diagram illustrates the high-level architecture, showing how users and applications interact with processing engines, catalogs, and storage. Hover over components for a brief description.</p>
+            <div class="flex flex-col items-center space-y-4 p-4 border border-gray-200 rounded-lg">
+                <div class="tooltip diagram-box w-1/2 md:w-1/3">JupyterLab / Client Apps
+                    <span class="tooltiptext">Interactive development (PySpark, PyIceberg) and client applications.</span>
+                </div>
+                <div class="diagram-arrow text-3xl">&darr;</div>
+                <div class="flex flex-col md:flex-row justify-around w-full space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="tooltip diagram-box flex-1">Apache Spark (Master/Workers)
+                         <span class="tooltiptext">Distributed processing engine for DDL/DML on Iceberg tables.</span>
+                    </div>
+                    <div class="tooltip diagram-box flex-1">PyIceberg (Python Library)
+                         <span class="tooltiptext">Python-native interaction with Iceberg tables.</span>
+                    </div>
+                </div>
+                <div class="diagram-arrow text-3xl">&darr;</div>
+                <div class="flex flex-col md:flex-row justify-around w-full space-y-4 md:space-y-0 md:space-x-4">
+                    <div class="tooltip diagram-box flex-1">Apache Polaris (REST Catalog)
+                        <span class="tooltiptext">Manages Iceberg table metadata via REST API.</span>
+                    </div>
+                    <div class="diagram-arrow hidden md:block self-center text-2xl">&harr;</div>
+                    <div class="tooltip diagram-box flex-1">Apache Gravitino (REST Catalog)
+                        <span class="tooltiptext">Alternative REST catalog for Iceberg, potentially managing other metadata.</span>
+                    </div>
+                </div>
+                <div class="diagram-arrow text-3xl">&darr;</div>
+                <div class="tooltip diagram-box w-1/2 md:w-1/3">MinIO (S3 Object Storage)
+                    <span class="tooltiptext">Stores Iceberg data files (Parquet, Avro, ORC) and metadata files (manifests, table metadata).</span>
+                </div>
+            </div>
+            <p class="mt-4 text-sm text-center">This diagram shows the flow: JupyterLab/clients use Spark or PyIceberg. These engines communicate with an Iceberg REST Catalog (Polaris or Gravitino) to discover and manage table metadata. The actual data and Iceberg metadata files reside in MinIO.</p>
+        </section>
+
+        <section id="section-phased-impl" class="content-section p-6 md:p-8">
+            <h2 class="text-3xl font-semibold mb-6">Phased Implementation Overview</h2>
+            <p class="mb-6">The report details a phased approach to building the data lakehouse. This modular construction simplifies setup and troubleshooting. Each phase builds upon the previous one, culminating in a fully functional environment.</p>
+            <div class="space-y-6">
+                <div class="flex items-start p-4 rounded-lg bg-accent-blue-light">
+                    <div class="text-2xl font-bold accent-blue mr-4">1</div>
+                    <div>
+                        <h3 class="text-xl font-semibold">Phase 1: Storage & Basic Interaction</h3>
+                        <p class="text-sm">Establish MinIO for S3 storage and JupyterLab with PyIceberg configured for basic S3 access. This forms the foundational data layer.</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-center my-2"><span class="diagram-arrow text-2xl">&darr;</span></div>
+                <div class="flex items-start p-4 rounded-lg bg-accent-teal-light">
+                    <div class="text-2xl font-bold accent-teal mr-4">2</div>
+                    <div>
+                        <h3 class="text-xl font-semibold">Phase 2: Spark Integration</h3>
+                        <p class="text-sm">Add a Spark standalone cluster (master and worker) and configure it within JupyterLab to interact with MinIO. This enables distributed processing capabilities.</p>
+                    </div>
+                </div>
+                <div class="flex items-center justify-center my-2"><span class="diagram-arrow text-2xl">&darr;</span></div>
+                <div class="flex items-start p-4 rounded-lg bg-accent-blue-light">
+                    <div class="text-2xl font-bold accent-blue mr-4">3</div>
+                    <div>
+                        <h3 class="text-xl font-semibold">Phase 3: Polaris Catalog</h3>
+                        <p class="text-sm">Integrate Apache Polaris as an Iceberg REST catalog. Configure Spark and PyIceberg to use Polaris for managing Iceberg tables on MinIO.</p>
+                    </div>
+                </div>
+                 <div class="flex items-center justify-center my-2"><span class="diagram-arrow text-2xl">&darr;</span></div>
+                <div class="flex items-start p-4 rounded-lg bg-accent-teal-light">
+                    <div class="text-2xl font-bold accent-teal mr-4">4</div>
+                    <div>
+                        <h3 class="text-xl font-semibold">Phase 4: Gravitino Catalog</h3>
+                        <p class="text-sm">Introduce Apache Gravitino as an alternative Iceberg REST catalog. Configure Spark and PyIceberg to use Gravitino, enabling comparison between the two catalog solutions.</p>
+                    </div>
+                </div>
+            </div>
+             <p class="mt-6 text-sm">This step-by-step process ensures each component is correctly configured and operational before adding dependent services, which is a best practice for complex, multi-container Docker deployments.</p>
+        </section>
+
+        <section id="section-catalog-comparison" class="content-section p-6 md:p-8">
+            <h2 class="text-3xl font-semibold mb-6">Catalog Comparison: Polaris vs. Gravitino</h2>
+            <p class="mb-6">The report provides a comparative analysis of Apache Polaris and Apache Gravitino as Iceberg REST catalog solutions based on the setup experience. Both are incubating Apache projects aiming to provide robust catalog services for Iceberg.</p>
+            <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold mb-3">Comparative Ratings (Conceptual)</h3>
+                    <p class="text-sm mb-4">This chart visualizes conceptual ratings based on the report's discussion of ease of setup, S3 configuration, and documentation for a non-Kubernetes Docker environment. Higher scores indicate a more favorable assessment in this specific context.</p>
+                    <div class="chart-container">
+                        <canvas id="catalogComparisonChart"></canvas>
+                    </div>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-3">Key Differences Summary</h3>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full bg-white border border-gray-300">
+                            <thead class="bg-gray-100">
+                                <tr>
+                                    <th class="text-left py-3 px-4 font-semibold text-sm">Feature</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-sm">Apache Polaris</th>
+                                    <th class="text-left py-3 px-4 font-semibold text-sm">Apache Gravitino</th>
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-200">
+                                <tr><td class="py-2 px-4">Docker Setup (non-K8s)</td><td class="py-2 px-4">Moderate; potential local build</td><td class="py-2 px-4">Good; official images, playground</td></tr>
+                                <tr><td class="py-2 px-4">S3/MinIO Config</td><td class="py-2 px-4">Quarkus mechanisms</td><td class="py-2 px-4">Explicit properties in gravitino.conf</td></tr>
+                                <tr><td class="py-2 px-4">Documentation (for this use case)</td><td class="py-2 px-4">Fair; non-K8s less prominent</td><td class="py-2 px-4">Good; specific docs, playground</td></tr>
+                                <tr><td class="py-2 px-4">Scope of Service</td><td class="py-2 px-4">Focused Iceberg catalog</td><td class="py-2 px-4">Unified metadata (Iceberg, Hive, etc.)</td></tr>
+                                 <tr><td class="py-2 px-4">Perceived Maturity (for this setup)</td><td class="py-2 px-4">Evolving for non-K8s</td><td class="py-2 px-4">More mature via playground examples</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                    <p class="mt-4 text-sm">The report suggests Gravitino's playground offered a more streamlined path for this project's Dockerized setup, while Polaris's focus is strictly on Iceberg. The "best" choice depends on specific project needs and the evolving maturity of these incubating projects.</p>
+                </div>
+            </div>
+        </section>
+
+        <section id="section-iceberg-ops" class="content-section p-6 md:p-8">
+            <h2 class="text-3xl font-semibold mb-6">Iceberg Operations: DDL & DML</h2>
+            <p class="mb-6">Apache Iceberg supports a rich set of Data Definition Language (DDL) and Data Manipulation Language (DML) operations. The report demonstrates these using both PyIceberg (for Python-native interaction) and Apache Spark (SQL and DataFrame API). This section highlights key operations.</p>
+            
+            <div id="icebergOpsTabs">
+                <button class="tab-button active" onclick="openIcebergOpsTab(event, 'PyIceberg')">PyIceberg Examples</button>
+                <button class="tab-button" onclick="openIcebergOpsTab(event, 'Spark')">Spark Examples</button>
+            </div>
+
+            <div id="PyIceberg" class="tab-content">
+                <h3 class="text-2xl font-semibold my-4">PyIceberg Operations</h3>
+                <p class="mb-4">PyIceberg allows direct interaction with Iceberg tables using Python. Key operations include:</p>
+                <div class="space-y-3">
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><strong>Namespace & Table Creation:</strong> Define schema, partitioning, and create tables.</div>
+                    <div class="collapsible-content"><p class="text-sm">PyIceberg's `catalog.create_namespace()` and `catalog.create_table()` (with `Schema`, `PartitionSpec`) are used. Example: `catalog.create_table(identifier='db.tbl', schema=my_schema, partition_spec=my_spec)`.</p></div>
+                    
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><strong>Schema & Partition Evolution:</strong> Modify table structure dynamically.</div>
+                    <div class="collapsible-content"><p class="text-sm">Use `table.update_schema()` or `table.update_spec()` contexts to add/remove/rename columns or change partitioning. Example: `with table.update_schema() as update: update.add_column(...)`.</p></div>
+
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><strong>Data Appending:</strong> Add new data using Arrow tables.</div>
+                    <div class="collapsible-content"><p class="text-sm">`table.append(arrow_table)` adds records. PyIceberg handles "fast append".</p></div>
+
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><strong>Data Overwriting:</strong> Replace data, fully or partially.</div>
+                    <div class="collapsible-content"><p class="text-sm">`table.overwrite(arrow_table, overwrite_filter=expression)` for conditional overwrites.</p></div>
+                    
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><strong>Data Deletion:</strong> Remove rows based on filters.</div>
+                    <div class="collapsible-content"><p class="text-sm">`table.delete(delete_filter=expression)` removes matching rows.</p></div>
+
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><strong>Upserting Data:</strong> Insert new rows or update existing ones.</div>
+                    <div class="collapsible-content"><p class="text-sm">`table.upsert(arrow_table)` if `identifier_field_ids` are defined in the schema.</p></div>
+                </div>
+            </div>
+
+            <div id="Spark" class="tab-content" style="display:none;">
+                <h3 class="text-2xl font-semibold my-4">Spark Operations</h3>
+                <p class="mb-4">Spark provides SQL extensions and DataFrame APIs for Iceberg. Key operations include:</p>
+                 <div class="space-y-3">
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><strong>Namespace & Table Creation (SQL):</strong> `CREATE NAMESPACE`, `CREATE TABLE ... USING iceberg`.</div>
+                    <div class="collapsible-content"><p class="text-sm">Example: `CREATE TABLE catalog_name.db_name.table_name (col1 INT) USING iceberg PARTITIONED BY (days(ts_col));`.</p></div>
+                    
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><strong>Schema & Partition Evolution (SQL):</strong> `ALTER TABLE` commands.</div>
+                    <div class="collapsible-content"><p class="text-sm">Examples: `ALTER TABLE ... ADD COLUMN ...`, `ALTER TABLE ... ADD PARTITION FIELD ...`.</p></div>
+
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><strong>Data Insertion (SQL & DataFrame):</strong> `INSERT INTO` or DataFrame `writeTo().append()`.</div>
+                    <div class="collapsible-content"><p class="text-sm">SQL: `INSERT INTO tbl VALUES (...)`. DataFrame: `df.writeTo("catalog.db.tbl").append()`.</p></div>
+
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><strong>Data Overwriting (SQL & DataFrame):</strong> Dynamic partition overwrites.</div>
+                    <div class="collapsible-content"><p class="text-sm">DataFrame: `df.write.format("iceberg").mode("overwrite").option("partitionOverwriteMode", "dynamic").save(...)`.</p></div>
+                    
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><strong>Updating Data (SQL):</strong> `MERGE INTO` for upserts.</div>
+                    <div class="collapsible-content"><p class="text-sm">`MERGE INTO target t USING source s ON t.id = s.id WHEN MATCHED THEN UPDATE SET ... WHEN NOT MATCHED THEN INSERT ...`.</p></div>
+
+                    <div class="collapsible-header" onclick="toggleCollapsible(this)"><strong>Deleting Data (SQL):</strong> `DELETE FROM`.</div>
+                    <div class="collapsible-content"><p class="text-sm">`DELETE FROM catalog_name.db_name.table_name WHERE condition;`.</p></div>
+                </div>
+            </div>
+            <p class="mt-6 text-sm">These operations allow comprehensive management of Iceberg tables, leveraging the strengths of each tool. The report contains detailed code examples for these operations within Jupyter notebooks.</p>
+        </section>
+
+        <section id="section-advanced-features" class="content-section p-6 md:p-8">
+            <h2 class="text-3xl font-semibold mb-6">Advanced Iceberg Features</h2>
+            <p class="mb-6">Iceberg offers several advanced features that enhance data management, performance, and reliability. This section provides an overview of key features demonstrated in the report.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div class="p-4 rounded-lg bg-accent-blue-light">
+                    <h3 class="text-xl font-semibold mb-2 accent-blue">Snapshotting & Time Travel</h3>
+                    <p class="text-sm mb-2">Iceberg tracks table changes through snapshots. Each DML operation creates a new snapshot, allowing users to query historical versions of the data ("time travel") or roll back to previous states.</p>
+                    <div class="text-center p-2 border border-dashed border-accent-blue rounded">
+                        <p class="font-mono text-xs">Snap S1 (t0) &rarr; Snap S2 (t1) &rarr; Snap S3 (t2)</p>
+                        <p class="text-xs mt-1">Query `VERSION AS OF S1` or `TIMESTAMP AS OF t0`</p>
+                    </div>
+                </div>
+                <div class="p-4 rounded-lg bg-accent-teal-light">
+                    <h3 class="text-xl font-semibold mb-2 accent-teal">Hidden Partitioning</h3>
+                    <p class="text-sm mb-2">Partition values are derived from source columns (e.g., `days(event_ts)`). Users query the source column, and Iceberg automatically prunes partitions, simplifying queries while retaining performance benefits.</p>
+                     <div class="text-center p-2 border border-dashed border-accent-teal rounded">
+                        <p class="font-mono text-xs">Source: `event_ts` &rarr; Hidden: `event_ts_day`</p>
+                        <p class="text-xs mt-1">Query: `WHERE event_ts > 'date'` (uses `event_ts_day` for pruning)</p>
+                    </div>
+                </div>
+                <div class="p-4 rounded-lg bg-accent-teal-light">
+                    <h3 class="text-xl font-semibold mb-2 accent-teal">Filter Pushdown</h3>
+                    <p class="text-sm mb-2">Iceberg uses file-level metadata (min/max stats per column) to prune data files that don't match query predicates. This significantly reduces I/O and improves query speed by avoiding scans of irrelevant data.</p>
+                    <div class="text-center p-2 border border-dashed border-accent-teal rounded">
+                        <p class="font-mono text-xs">Query: `WHERE temp > 20`</p>
+                        <p class="text-xs mt-1">Iceberg checks file metadata &rarr; Skips files where max(temp) &lt;= 20</p>
+                    </div>
+                </div>
+                <div class="p-4 rounded-lg bg-accent-blue-light">
+                    <h3 class="text-xl font-semibold mb-2 accent-blue">Data Compaction</h3>
+                    <p class="text-sm mb-2">Frequent small writes can lead to many small files, degrading performance. Spark's `rewrite_data_files` procedure (or similar tools) can compact these into larger, optimized files, improving query efficiency.</p>
+                    <div class="text-center p-2 border border-dashed border-accent-blue rounded">
+                        <p class="font-mono text-xs">[small_file] [small_file] &rarr; `rewrite_data_files` &rarr; [LARGE_FILE]</p>
+                    </div>
+                </div>
+            </div>
+            <p class="mt-6 text-sm">These features are critical for building efficient, reliable, and manageable data lakehouses. The report's examples demonstrate how to use and verify them.</p>
+        </section>
+
+        <section id="section-deployment" class="content-section p-6 md:p-8">
+            <h2 class="text-3xl font-semibold mb-6">Deployment & Best Practices</h2>
+            <p class="mb-6">The report provides a comprehensive `docker-compose.yml` for deploying the entire data lakehouse stack. Effective management also involves adhering to best practices for Iceberg table maintenance.</p>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+                <div>
+                    <h3 class="text-xl font-semibold mb-3">Key Docker Compose Services:</h3>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li><strong>MinIO:</strong> S3-compatible object storage.</li>
+                        <li><strong>mc (MinIO Client):</strong> For initial bucket setup.</li>
+                        <li><strong>JupyterLab:</strong> Interactive environment (PySpark, PyIceberg).</li>
+                        <li><strong>Spark Master & Worker:</strong> Distributed processing cluster.</li>
+                        <li><strong>Polaris Catalog:</strong> Iceberg REST catalog service.</li>
+                        <li><strong>Gravitino Server:</strong> Alternative Iceberg REST catalog service.</li>
+                    </ul>
+                    <p class="mt-3 text-sm">A custom Docker network (`datalake_net`) enables inter-service communication. Named volumes ensure data persistence.</p>
+                </div>
+                <div>
+                    <h3 class="text-xl font-semibold mb-3">Iceberg Management Best Practices:</h3>
+                    <ul class="list-disc list-inside space-y-1 text-sm">
+                        <li><strong>Regularly Expire Snapshots:</strong> Prevents metadata bloat and reclaims storage.</li>
+                        <li><strong>Remove Old Metadata Files:</strong> Keeps table metadata lean.</li>
+                        <li><strong>Perform Data Compaction:</strong> Optimizes query performance by managing small files.</li>
+                        <li><strong>Monitor Table Statistics:</strong> Ensures effective query planning.</li>
+                        <li><strong>Plan Schema & Partition Evolution:</strong> Align changes with query patterns.</li>
+                        <li><strong>Leverage Hidden Partitioning & Filter Pushdown:</strong> For query efficiency.</li>
+                        <li><strong>Version Control Artifacts:</strong> For reproducibility (notebooks, configs).</li>
+                    </ul>
+                </div>
+            </div>
+            <p class="mt-6 text-sm">The report's Appendix contains the full `docker-compose.yml` and key configuration snippets, providing a blueprint for users to replicate and extend the environment.</p>
+        </section>
+
+        <section id="section-conclusion" class="content-section p-6 md:p-8">
+            <h2 class="text-3xl font-semibold mb-6">Conclusion & Strategic Recommendations</h2>
+            <p class="mb-4">The project successfully demonstrated building a Dockerized data lakehouse with Apache Iceberg, showcasing two REST catalog options (Polaris and Gravitino), Spark, and PyIceberg. The phased implementation and detailed examples provide a valuable resource for understanding and implementing such an architecture.</p>
+            <h3 class="text-xl font-semibold mb-2">Catalog Recommendations (from report):</h3>
+            <ul class="list-disc list-inside space-y-1 mb-4 text-sm">
+                <li><strong>Apache Gravitino:</strong> Suggested for a quicker start in a comprehensive Dockerized setup due to its playground examples and broader metadata scope.</li>
+                <li><strong>Apache Polaris:</strong> A viable option if a lightweight, dedicated Iceberg catalog is needed, particularly as its non-Kubernetes deployment story matures.</li>
+            </ul>
+            <p class="mb-4">The choice depends on specific project needs, deployment preferences, and the evolving maturity of these incubating projects. Adhering to Iceberg management best practices is crucial for long-term operational success.</p>
+            <p>Potential future extensions include integrating other query engines (Trino, Flink), implementing streaming ingestion, enhancing security, and conducting performance benchmarks.</p>
+        </section>
+
+    </main>
+
+    <script>
+        // Sidebar Navigation Logic
+        const sidebarLinks = document.querySelectorAll('#sidebarNav a');
+        const sections = document.querySelectorAll('main section');
+        const mobileNavToggle = document.getElementById('mobileNavToggle');
+        const sidebarNav = document.getElementById('sidebarNav');
+
+        function updateActiveLink() {
+            let currentSectionId = '';
+            sections.forEach(section => {
+                const sectionTop = section.offsetTop;
+                const sectionHeight = section.clientHeight;
+                if (pageYOffset >= (sectionTop - sectionHeight / 3)) {
+                    currentSectionId = section.getAttribute('id');
+                }
+            });
+
+            sidebarLinks.forEach(link => {
+                link.classList.remove('active');
+                if (link.getAttribute('href') === `#${currentSectionId}`) {
+                    link.classList.add('active');
+                }
+            });
+        }
+        
+        sidebarLinks.forEach(link => {
+            link.addEventListener('click', (e) => {
+                // e.preventDefault(); // Keep default anchor behavior for scrolling
+                sidebarLinks.forEach(l => l.classList.remove('active'));
+                link.classList.add('active');
+                if (sidebarNav.classList.contains('block') && window.innerWidth < 768) {
+                    sidebarNav.classList.remove('block');
+                    sidebarNav.classList.add('hidden');
+                }
+            });
+        });
+        
+        window.addEventListener('scroll', updateActiveLink);
+        updateActiveLink(); // Initial call
+
+        mobileNavToggle.addEventListener('click', () => {
+            sidebarNav.classList.toggle('hidden');
+            sidebarNav.classList.toggle('block');
+        });
+
+
+        // Catalog Comparison Chart
+        const catalogCtx = document.getElementById('catalogComparisonChart').getContext('2d');
+        const catalogChart = new Chart(catalogCtx, {
+            type: 'bar',
+            data: {
+                labels: wrapChartLabels(['Ease of Docker Setup (non-K8s)', 'S3/MinIO Config Clarity', 'Documentation (for this use case)', 'Perceived Maturity (for this setup)'], 16),
+                datasets: [
+                    {
+                        label: 'Apache Polaris',
+                        data: [6, 7, 5, 7], // Conceptual scores
+                        backgroundColor: '#5DADE2', // Soft Blue
+                        borderColor: '#5DADE2',
+                        borderWidth: 1
+                    },
+                    {
+                        label: 'Apache Gravitino',
+                        data: [8, 8, 8, 8], // Conceptual scores
+                        backgroundColor: '#76D7C4', // Soft Teal
+                        borderColor: '#76D7C4',
+                        borderWidth: 1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        max: 10,
+                        title: { display: true, text: 'Conceptual Rating (1-10)', color: '#4A4A4A' },
+                        ticks: { color: '#4A4A4A' }
+                    },
+                    x: { ticks: { color: '#4A4A4A', font: { size: 10 } } }
+                },
+                plugins: {
+                    legend: { position: 'top', labels: { color: '#4A4A4A' } },
+                    tooltip: {
+                        callbacks: {
+                            title: function(tooltipItems) {
+                                const item = tooltipItems[0];
+                                let label = item.chart.data.labels[item.dataIndex];
+                                return Array.isArray(label) ? label.join(' ') : label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        function wrapChartLabels(labels, maxWidth) {
+            return labels.map(label => {
+                if (typeof label !== 'string' || label.length <= maxWidth) {
+                    return label;
+                }
+                const words = label.split(' ');
+                const lines = [];
+                let currentLine = '';
+                words.forEach(word => {
+                    if ((currentLine + word).length > maxWidth && currentLine.length > 0) {
+                        lines.push(currentLine.trim());
+                        currentLine = word + ' ';
+                    } else {
+                        currentLine += word + ' ';
+                    }
+                });
+                lines.push(currentLine.trim());
+                return lines;
+            });
+        }
+        
+        // Tab logic for Iceberg Operations
+        function openIcebergOpsTab(evt, tabName) {
+            var i, tabcontent, tabbuttons;
+            tabcontent = document.getElementById("section-iceberg-ops").getElementsByClassName("tab-content");
+            for (i = 0; i < tabcontent.length; i++) {
+                tabcontent[i].style.display = "none";
+            }
+            tabbuttons = document.getElementById("section-iceberg-ops").getElementsByClassName("tab-button");
+            for (i = 0; i < tabbuttons.length; i++) {
+                tabbuttons[i].className = tabbuttons[i].className.replace(" active", "");
+            }
+            document.getElementById(tabName).style.display = "block";
+            evt.currentTarget.className += " active";
+        }
+        
+        // Collapsible content logic
+        function toggleCollapsible(element) {
+            const content = element.nextElementSibling;
+            if (content.style.display === "block") {
+                content.style.display = "none";
+            } else {
+                content.style.display = "block";
+            }
+        }
+
+    </script>
+</body>
+</html>
