@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Infographic: Data Lakehouse Trends & Iceberg Project Insights</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            scroll-behavior: smooth;
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            height: 300px;
+            max-height: 400px;
+        }
+        @media (min-width: 768px) {
+            .chart-container {
+                height: 350px;
+            }
+        }
+        .flowchart-step {
+            border: 2px solid #4ECDC4; /* Turquoise */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            text-align: center;
+            background-color: white;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            transition: transform 0.3s ease;
+        }
+        .flowchart-step:hover {
+            transform: translateY(-5px);
+        }
+        .flowchart-arrow {
+            font-size: 2rem;
+            color: #FF6B6B; /* Coral Red */
+            margin: 0 0.5rem;
+            align-self: center;
+        }
+        .tech-card {
+            background-color: white;
+            border-radius: 0.75rem;
+            padding: 1.5rem;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -2px rgba(0,0,0,0.05);
+            text-align: center;
+            transition: all 0.3s ease-in-out;
+        }
+        .tech-card:hover {
+            transform: scale(1.05);
+            box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 10px 10px -5px rgba(0,0,0,0.04);
+        }
+        .tech-icon {
+            font-size: 3rem;
+            margin-bottom: 0.75rem;
+        }
+        .stat-card {
+            background-color: #4ECDC4; /* Turquoise */
+            color: white;
+            padding: 1.5rem;
+            border-radius: 0.75rem;
+            text-align: center;
+            box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1);
+        }
+        .stat-number {
+            font-size: 2.5rem;
+            font-weight: 700;
+        }
+        .section-title {
+            font-size: 2.25rem;
+            font-weight: 700;
+            color: #1A535C; /* Dark Teal */
+            margin-bottom: 1rem;
+            text-align: center;
+        }
+        .section-subtitle {
+            font-size: 1.125rem;
+            color: #2c3e50; /* Dark Blue/Gray */
+            margin-bottom: 2.5rem;
+            text-align: center;
+            max-width: 700px;
+            margin-left: auto;
+            margin-right: auto;
+        }
+        .sticky-nav {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            background-color: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+            padding: 0.5rem 0;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-700">
+
+    <nav class="sticky-nav hidden md:block">
+        <div class="container mx-auto px-6 py-2">
+            <ul class="flex justify-center space-x-6">
+                <li><a href="#hero" class="hover:text-[#FF6B6B]">Home</a></li>
+                <li><a href="#overview" class="hover:text-[#FF6B6B]">Overview</a></li>
+                <li><a href="#tech" class="hover:text-[#FF6B6B]">Technologies</a></li>
+                <li><a href="#architecture" class="hover:text-[#FF6B6B]">Architecture</a></li>
+                <li><a href="#trends" class="hover:text-[#FF6B6B]">Market Trends</a></li>
+                <li><a href="#getting-started" class="hover:text-[#FF6B6B]">Get Started</a></li>
+                <li><a href="#usage" class="hover:text-[#FF6B6B]">Usage Insights</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <section id="hero" class="py-16 md:py-24 bg-gradient-to-br from-[#4ECDC4] to-[#45B7D1]">
+        <div class="container mx-auto px-6 text-center text-white">
+            <h1 class="text-4xl md:text-6xl font-bold mb-6">Explore the Modern Data Lakehouse</h1>
+            <p class="text-xl md:text-2xl mb-8">A local, Dockerized environment for hands-on experience with Apache Iceberg, PyIceberg, Spark, Trino, and Flink using a JDBC Catalog.</p>
+            <a href="https://github.com/matejkratochvil/datalakehouse-iceberg-jdbc/tree/pyiceberg" target="_blank" class="bg-[#FF6B6B] hover:bg-opacity-80 text-white font-semibold py-3 px-8 rounded-lg text-lg transition duration-300">
+                View Project on GitHub ➔
+            </a>
+        </div>
+    </section>
+
+    <section id="overview" class="py-16">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title">Project Overview</h2>
+            <p class="section-subtitle">
+                This project provides a comprehensive, Docker-based setup to explore the capabilities of Apache Iceberg as an open table format. It integrates various powerful data processing engines and tools, allowing users to experiment with a modern data lakehouse architecture locally. The focus is on ease of setup and hands-on learning, particularly with PyIceberg and a JDBC-based catalog (PostgreSQL).
+            </p>
+            <div class="grid md:grid-cols-3 gap-8 text-center">
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <div class="text-5xl mb-4 text-[#FF6B6B]">💡</div>
+                    <h3 class="text-xl font-semibold text-[#1A535C] mb-2">Local Development</h3>
+                    <p>Easily spin up a full data lakehouse stack on your machine for development and testing.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <div class="text-5xl mb-4 text-[#4ECDC4]">⚙️</div>
+                    <h3 class="text-xl font-semibold text-[#1A535C] mb-2">Multi-Engine Support</h3>
+                    <p>Experiment with Iceberg tables using Spark, Trino, Flink, and the PyIceberg library.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-lg">
+                    <div class="text-5xl mb-4 text-[#45B7D1]">📚</div>
+                    <h3 class="text-xl font-semibold text-[#1A535C] mb-2">Hands-on Learning</h3>
+                    <p>Gain practical experience with Iceberg features, schema evolution, and data management.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="tech" class="py-16 bg-slate-100">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title">Core Technologies</h2>
+            <p class="section-subtitle">
+                The data lakehouse is powered by a suite of cutting-edge open-source technologies, working in concert to provide a robust and flexible platform.
+            </p>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-6">
+                <div class="tech-card">
+                    <div class="tech-icon">🧊</div>
+                    <h3 class="text-lg font-semibold text-[#1A535C]">Apache Iceberg</h3>
+                    <p class="text-sm">Open table format for huge analytic datasets.</p>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon">🐍</div>
+                    <h3 class="text-lg font-semibold text-[#1A535C]">PyIceberg</h3>
+                    <p class="text-sm">Python library for Iceberg table interaction.</p>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon">✨</div>
+                    <h3 class="text-lg font-semibold text-[#1A535C]">Apache Spark</h3>
+                    <p class="text-sm">Unified analytics engine for big data.</p>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon">🔗</div>
+                    <h3 class="text-lg font-semibold text-[#1A535C]">Apache Flink</h3>
+                    <p class="text-sm">Stream processing framework.</p>
+                </div>
+                 <div class="tech-card">
+                    <div class="tech-icon">🔍</div>
+                    <h3 class="text-lg font-semibold text-[#1A535C]">Trino (PrestoSQL)</h3>
+                    <p class="text-sm">Distributed SQL query engine.</p>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon">🐘</div>
+                    <h3 class="text-lg font-semibold text-[#1A535C]">PostgreSQL</h3>
+                    <p class="text-sm">JDBC catalog for Iceberg metadata.</p>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon">📦</div>
+                    <h3 class="text-lg font-semibold text-[#1A535C]">MinIO</h3>
+                    <p class="text-sm">S3-compatible object storage for data.</p>
+                </div>
+                <div class="tech-card">
+                    <div class="tech-icon">🐳</div>
+                    <h3 class="text-lg font-semibold text-[#1A535C]">Docker</h3>
+                    <p class="text-sm">Containerization for easy deployment.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="architecture" class="py-16">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title">Architecture at a Glance</h2>
+            <p class="section-subtitle">
+                The components are orchestrated via Docker Compose, creating an integrated environment where data processing engines interact with Iceberg tables stored in MinIO, using PostgreSQL as the metadata catalog.
+            </p>
+            <div class="bg-white p-6 md:p-8 rounded-lg shadow-xl">
+                <div class="flex flex-col items-center space-y-4">
+                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 w-full text-center">
+                        <div class="p-4 bg-sky-100 rounded-lg shadow">Spark Engine</div>
+                        <div class="p-4 bg-teal-100 rounded-lg shadow">Trino Engine</div>
+                        <div class="p-4 bg-indigo-100 rounded-lg shadow">Flink Engine</div>
+                    </div>
+                    <div class="text-3xl text-[#FF6B6B]">↕️</div>
+                    <div class="p-4 bg-amber-100 rounded-lg shadow w-full md:w-1/2 text-center">PyIceberg Library</div>
+                    <div class="text-3xl text-[#FF6B6B]">↕️</div>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4 w-full">
+                        <div class="p-4 bg-emerald-100 rounded-lg shadow text-center">
+                            <h4 class="font-semibold">PostgreSQL (JDBC Catalog)</h4>
+                            <p class="text-sm">Stores Iceberg Metadata</p>
+                        </div>
+                        <div class="p-4 bg-orange-100 rounded-lg shadow text-center">
+                            <h4 class="font-semibold">MinIO (S3 Storage)</h4>
+                            <p class="text-sm">Stores Iceberg Data Files (Parquet, etc.)</p>
+                        </div>
+                    </div>
+                    <div class="mt-4 p-3 bg-slate-200 rounded-lg shadow w-full text-center">
+                        All components run in Docker Containers managed by Docker Compose
+                    </div>
+                </div>
+                 <p class="mt-6 text-center text-slate-600">
+                    This diagram illustrates the flow of operations: Query engines (Spark, Trino, Flink) and the PyIceberg library interact with the Iceberg metadata stored in PostgreSQL and the actual data files in MinIO. This setup enables diverse data processing tasks on a unified data architecture.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <section id="trends" class="py-16 bg-slate-100">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title">Data Lakehouse: Industry Momentum</h2>
+            <p class="section-subtitle">
+                The adoption of data lakehouse architectures and open table formats like Apache Iceberg is rapidly increasing, driven by the need for flexible, scalable, and reliable data platforms. (The following charts are illustrative of general industry trends.)
+            </p>
+            <div class="grid md:grid-cols-2 gap-8 items-center">
+                <div class="bg-white p-6 rounded-lg shadow-xl">
+                    <h3 class="text-xl font-semibold text-[#1A535C] mb-4 text-center">Illustrative: Lakehouse Adoption Growth</h3>
+                    <div class="chart-container h-[300px] md:h-[350px]">
+                        <canvas id="marketGrowthChart"></canvas>
+                    </div>
+                    <p class="mt-4 text-sm text-center text-slate-600">This conceptual chart shows a strong upward trajectory in data lakehouse adoption, reflecting growing enterprise confidence.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-xl">
+                    <h3 class="text-xl font-semibold text-[#1A535C] mb-4 text-center">Illustrative: Tech Popularity in Lakehouses</h3>
+                    <div class="chart-container h-[300px] md:h-[350px]">
+                        <canvas id="techPopularityChart"></canvas>
+                    </div>
+                    <p class="mt-4 text-sm text-center text-slate-600">Open table formats and versatile query engines are key components in modern data lakehouse deployments.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section id="getting-started" class="py-16">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title">Quick Start: Launch Your Lakehouse</h2>
+            <p class="section-subtitle">
+                Setting up your local Iceberg data lakehouse is straightforward with Docker Compose. Follow these simplified steps derived from the project's README.
+            </p>
+            <div class="flex flex-col md:flex-row justify-center items-start md:items-center space-y-4 md:space-y-0 md:space-x-4">
+                <div class="flowchart-step">
+                    <span class="text-2xl font-bold text-[#FF6B6B]">1</span>
+                    <p class="mt-2 font-semibold">Clone Repository</p>
+                    <p class="text-sm">`git clone ...` & `cd ...` & `git checkout pyiceberg`</p>
+                </div>
+                <div class="flowchart-arrow hidden md:block">➔</div>
+                <div class="flowchart-step">
+                    <span class="text-2xl font-bold text-[#FF6B6B]">2</span>
+                    <p class="mt-2 font-semibold">Configure `.env`</p>
+                    <p class="text-sm">(If needed, adjust MinIO/Postgres settings)</p>
+                </div>
+                <div class="flowchart-arrow hidden md:block">➔</div>
+                <div class="flowchart-step">
+                    <span class="text-2xl font-bold text-[#FF6B6B]">3</span>
+                    <p class="mt-2 font-semibold">Start Services</p>
+                    <p class="text-sm">`docker-compose up -d`</p>
+                </div>
+                <div class="flowchart-arrow hidden md:block">➔</div>
+                <div class="flowchart-step">
+                    <span class="text-2xl font-bold text-[#FF6B6B]">4</span>
+                    <p class="mt-2 font-semibold">Explore!</p>
+                    <p class="text-sm">Use Spark, Trino, PyIceberg, or Jupyter.</p>
+                </div>
+            </div>
+             <p class="mt-8 text-center text-slate-600">
+                This streamlined process, detailed in the repository's `README.md`, allows you to quickly have a fully functional data lakehouse environment running locally. The `docker-compose.yml` file orchestrates all necessary services including MinIO for storage, PostgreSQL for the JDBC catalog, and the query engines.
+            </p>
+        </div>
+    </section>
+
+    <section id="usage" class="py-16 bg-slate-100">
+        <div class="container mx-auto px-6">
+            <h2 class="section-title">Exploring Your Data Lakehouse</h2>
+            <p class="section-subtitle">
+                Once set up, you can interact with your Iceberg tables using various tools. The project provides examples and notebooks for Spark SQL and PyIceberg operations. (The following charts are illustrative of potential usage patterns.)
+            </p>
+            <div class="grid md:grid-cols-2 gap-8 items-start">
+                <div class="bg-white p-6 rounded-lg shadow-xl">
+                    <h3 class="text-xl font-semibold text-[#1A535C] mb-4 text-center">PyIceberg: Programmatic Table Management</h3>
+                     <p class="text-sm text-center text-slate-600 mb-4">PyIceberg enables direct Python interaction with Iceberg table metadata and data, useful for automation and custom tooling.</p>
+                    <div class="chart-container h-[300px] md:h-[350px]">
+                        <canvas id="pyicebergOpsChart"></canvas>
+                    </div>
+                    <p class="mt-4 text-sm text-center text-slate-600">Illustrative common operations include creating tables, reading schemas, and managing snapshots.</p>
+                </div>
+                <div class="bg-white p-6 rounded-lg shadow-xl">
+                    <h3 class="text-xl font-semibold text-[#1A535C] mb-4 text-center">Spark SQL: Powerful Data Analytics</h3>
+                    <p class="text-sm text-center text-slate-600 mb-4">Leverage Spark SQL for complex queries, data transformations, and large-scale analytics on your Iceberg tables.</p>
+                    <div class="space-y-4">
+                        <div class="stat-card">
+                            <div class="stat-number">100M+</div>
+                            <p>Rows Processed (Illustrative Capacity)</p>
+                        </div>
+                        <div class="stat-card bg-[#FF6B6B]">
+                            <div class="stat-number">&lt;1s</div>
+                            <p>Avg. Metadata Query (Illustrative)</p>
+                        </div>
+                         <p class="mt-4 text-sm text-center text-slate-600">Spark's integration with Iceberg allows for efficient querying, DDL operations like `CREATE TABLE`, `ALTER TABLE`, and data manipulation with `INSERT` and `SELECT` statements.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <footer class="py-12 bg-[#1A535C] text-slate-200 text-center">
+        <div class="container mx-auto px-6">
+            <p class="mb-2">Explore the full project and contribute on GitHub.</p>
+            <a href="https://github.com/matejkratochvil/datalakehouse-iceberg-jdbc/tree/pyiceberg" target="_blank" class="text-[#4ECDC4] hover:text-[#FF6B6B] font-semibold transition duration-300">
+                matejkratochvil/datalakehouse-iceberg-jdbc (pyiceberg branch)
+            </a>
+            <p class="mt-4 text-sm">&copy; 2024 Infographic. Data and insights synthesized from the project repository. Illustrative charts for market trends.</p>
+        </div>
+    </footer>
+
+    <script>
+        const chartJsTooltipConfig = {
+            plugins: {
+                tooltip: {
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            const item = tooltipItems[0];
+                            let label = item.chart.data.labels[item.dataIndex];
+                            if (Array.isArray(label)) {
+                              return label.join(' ');
+                            } else {
+                              return label;
+                            }
+                        }
+                    }
+                }
+            }
+        };
+
+        function wrapLabels(labels, maxLength = 16) {
+            return labels.map(label => {
+                if (typeof label === 'string' && label.length > maxLength) {
+                    const words = label.split(' ');
+                    const lines = [];
+                    let currentLine = '';
+                    words.forEach(word => {
+                        if ((currentLine + word).length > maxLength && currentLine.length > 0) {
+                            lines.push(currentLine.trim());
+                            currentLine = word + ' ';
+                        } else {
+                            currentLine += word + ' ';
+                        }
+                    });
+                    lines.push(currentLine.trim());
+                    return lines;
+                }
+                return label;
+            });
+        }
+
+        // Illustrative Market Growth Chart
+        const marketGrowthCtx = document.getElementById('marketGrowthChart').getContext('2d');
+        new Chart(marketGrowthCtx, {
+            type: 'line',
+            data: {
+                labels: wrapLabels(['2021', '2022', '2023', '2024 (Est.)', '2025 (Proj.)', '2026 (Proj.)']),
+                datasets: [{
+                    label: 'Lakehouse Adoption Index',
+                    data: [30, 45, 65, 80, 90, 95],
+                    borderColor: '#FF6B6B', // Coral Red
+                    backgroundColor: 'rgba(255, 107, 107, 0.2)',
+                    fill: true,
+                    tension: 0.4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, suggestedMax:100, ticks: {color: '#2c3e50'}}, x: {ticks: {color: '#2c3e50'}} },
+                ...chartJsTooltipConfig
+            }
+        });
+
+        // Illustrative Tech Popularity Chart
+        const techPopularityCtx = document.getElementById('techPopularityChart').getContext('2d');
+        new Chart(techPopularityCtx, {
+            type: 'doughnut',
+            data: {
+                labels: wrapLabels(['Apache Iceberg', 'Delta Lake', 'Apache Hudi', 'Other Formats']),
+                datasets: [{
+                    label: 'Popularity in Lakehouses',
+                    data: [45, 30, 15, 10],
+                    backgroundColor: ['#4ECDC4', '#45B7D1', '#FFD166', '#FF6B6B'], // Turquoise, Sky Blue, Yellow, Coral Red
+                    hoverOffset: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                ...chartJsTooltipConfig
+            }
+        });
+        
+        // Illustrative PyIceberg Operations Chart
+        const pyicebergOpsCtx = document.getElementById('pyicebergOpsChart').getContext('2d');
+        new Chart(pyicebergOpsCtx, {
+            type: 'bar',
+            data: {
+                labels: wrapLabels(['Table Creation', 'Schema Read', 'Snapshot Query', 'Data File Access', 'Metadata Update']),
+                datasets: [{
+                    label: 'Frequency of Operations (Illustrative)',
+                    data: [60, 150, 120, 90, 75],
+                    backgroundColor: ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFD166', '#1A535C'],
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: { y: { beginAtZero: true, ticks: {color: '#2c3e50'}}, x: {ticks: {color: '#2c3e50'}} },
+                indexAxis: 'y',
+                ...chartJsTooltipConfig
+            }
+        });
+    </script>
+</body>
+</html>
