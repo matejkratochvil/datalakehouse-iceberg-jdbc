@@ -4,3 +4,16 @@ metastore_db/
 Elspotprices*
 *.parquet
 .vscode
+.DS_Store
+notebooks/testdata/consuption/ConsumptionIndustry0.json
+notebooks/testdata/consuption/ConsumptionIndustry1.json
+notebooks/testdata/consuption/ConsumptionIndustry2.json
+notebooks/testdata/consuption/ConsumptionIndustry3.json
+notebooks/testdata/consuption/ConsumptionIndustry4.json
+notebooks/testdata/consuption/ConsumptionIndustry5.json
+notebooks/testdata/consuption/ConsumptionIndustry6.json
+notebooks/testdata/consuption/ConsumptionIndustry7.json
+notebooks/testdata/consuption/ConsumptionIndustry9.json
+notebooks/testdata/consuption/ConsumptionIndustry10.json
+notebooks/testdata/consuption/ConsumptionIndustry11.json
+notebooks/testdata/consuption/ConsumptionIndustry100.json
