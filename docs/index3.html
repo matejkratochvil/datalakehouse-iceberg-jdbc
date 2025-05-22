@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Interactive Datalakehouse Report: Iceberg & REST Catalogs</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Visualization & Content Choices: 
+        - Report Sections (Intro, Stages 1-4, Comparison, Features, Project Structure): Text, Code Blocks (YAML, Dockerfile, Python, Properties, Bash), HTML Table. Goal: Present report content clearly. Method: Standard HTML elements styled with Tailwind. Interaction: Scroll navigation.
+        - Comparison (Stage 5): HTML table. Goal: Compare Polaris and Gravitino. Method: HTML table.
+        - New Chart: "Conceptual Component Config Points". Bar chart (Chart.js). Goal: Illustrate relative setup effort for key components based on report details. Interaction: Tooltips. Justification: Provides a quick visual summary of component complexity. Library: Chart.js.
+        - CONFIRMATION: NO SVG graphics used. NO Mermaid JS used. -->
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+        
+        .code-block {
+            background-color: #1F2937; /* Tailwind gray-800 */
+            color: #F3F4F6; /* Tailwind gray-100 */
+            padding: 1rem;
+            border-radius: 0.5rem; /* rounded-lg */
+            overflow-x: auto;
+            font-family: 'SFMono-Regular', Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+            font-size: 0.875rem; /* text-sm */
+            line-height: 1.5; /* leading-relaxed */
+            margin-bottom: 1.5rem; /* mb-6 */
+            border: 1px solid #374151; /* Tailwind gray-700 */
+        }
+        .code-block-title {
+            font-size: 0.875rem; /* text-sm */
+            color: #9CA3AF; /* Tailwind gray-400 */
+            margin-bottom: 0.5rem; /* mb-2 */
+            font-weight: 500; /* font-medium */
+        }
+        .chart-container {
+            position: relative;
+            width: 100%;
+            max-width: 768px; /* max-w-3xl */
+            margin-left: auto;
+            margin-right: auto;
+            height: 350px; /* Adjusted base height */
+            max-height: 450px; /* Adjusted max height */
+        }
+        @media (min-width: 768px) { /* md breakpoint */
+            .chart-container {
+                height: 400px; 
+            }
+        }
+        html {
+            scroll-behavior: smooth;
+        }
+        .sidebar-link {
+            display: block;
+            padding: 0.5rem 0.75rem; /* py-2 px-3 */
+            border-radius: 0.375rem; /* rounded-md */
+            transition: background-color 0.2s ease-in-out, color 0.2s ease-in-out;
+            font-size: 0.9rem;
+        }
+        .sidebar-link:hover {
+            background-color: #0369A1; /* sky-700 */
+            color: #FFFFFF;
+        }
+        .sidebar-link.active { /* For potential JS-based active state highlighting */
+            background-color: #0EA5E9; /* sky-500 */
+            color: #FFFFFF;
+            font-weight: 600;
+        }
+        h2, h3, h4 {
+            scroll-margin-top: 20px; /* Offset for fixed header if any, or just some breathing room */
+        }
+    </style>
+</head>
+<body class="bg-slate-100 text-slate-700">
+    <div class="flex flex-col md:flex-row min-h-screen">
+        <nav class="md:w-72 bg-sky-800 text-sky-100 p-5 md:sticky md:top-0 md:h-screen overflow-y-auto shadow-lg">
+            <h1 class="text-2xl font-bold mb-6 border-b border-sky-600 pb-3 text-white">Iceberg Datalakehouse</h1>
+            <ul class="space-y-1">
+                <li><a href="#introduction" class="sidebar-link">1. Introduction</a></li>
+                <li><a href="#stage1" class="sidebar-link">2. Stage 1: MinIO & JupyterLab</a></li>
+                <li><a href="#stage2" class="sidebar-link">3. Stage 2: Spark Integration</a></li>
+                <li><a href="#stage3" class="sidebar-link">4. Stage 3: Polaris Catalog</a></li>
+                <li><a href="#stage4" class="sidebar-link">5. Stage 4: Gravitino Catalog</a></li>
+                <li><a href="#stage5" class="sidebar-link">6. Stage 5: Catalog Comparison</a></li>
+                <li><a href="#stage6" class="sidebar-link">7. Stage 6: Iceberg Features</a></li>
+                <li><a href="#stage7" class="sidebar-link">8. Stage 7: Project Structure</a></li>
+                <li><a href="#chart" class="sidebar-link">9. Component Config Overview</a></li>
+            </ul>
+        </nav>
+
+        <main class="flex-1 p-6 md:p-10 overflow-y-auto">
+            
+            <section id="introduction" class="mb-12 bg-white p-6 rounded-lg shadow-xl">
+                <h2 class="text-3xl font-semibold mb-6 text-sky-700 border-b-2 border-sky-200 pb-3">1. Introduction</h2>
+                <p class="mb-4 text-lg leading-relaxed">This section introduces the context for building a modern datalakehouse. It outlines the challenges with traditional systems, the rise of the datalakehouse paradigm, and the central role of Apache Iceberg. You'll find an overview of the project's objectives, the technology stack used (MinIO, Spark, PyIceberg, JupyterLab, Polaris, Gravitino), and the iterative approach to building the containerized environment with Docker Compose. The importance of open REST catalogs for interoperability is also highlighted.</p>
+                <p class="mb-4">The contemporary data landscape is characterized by an ever-increasing volume, velocity, and variety of data, demanding architectures that are both scalable and flexible. Traditional data warehouses, while powerful for structured data analytics, often struggle with the agility required for diverse data types and evolving schemas. Data lakes emerged to address this by offering cost-effective storage for raw data in various formats, but they initially lacked crucial data management features like ACID transactions, schema enforcement, and efficient updates. The datalakehouse paradigm seeks to bridge this gap, combining the scalability and flexibility of data lakes with the data management and performance features of data warehouses.</p>
+                <p class="mb-4">At the heart of many modern datalakehouse implementations is Apache Iceberg, an open table format designed for petabyte-scale analytic datasets. Iceberg brings familiar SQL table semantics—such as transactional consistency (ACID), schema evolution, time travel, and efficient partitioning—directly to files stored in data lakes. Its engine-agnostic design allows various processing frameworks like Apache Spark, Trino, and Flink to work concurrently on the same data.</p>
+                <p class="mb-4">This report details the construction of a comprehensive, containerized datalakehouse project using Docker Compose. The primary objective is to provide a practical, hands-on platform for exploring Apache Iceberg's core capabilities and its integration with key ecosystem components. A significant focus will be on the use and comparison of two emerging REST-based Iceberg catalog services: Apache Polaris and Apache Gravitino, which offer centralized metadata management and facilitate interoperability.</p>
+                <h3 class="text-xl font-semibold mb-3 mt-5 text-sky-600">Technology Stack:</h3>
+                <ul class="list-disc list-inside mb-4 pl-4 space-y-1 text-slate-600">
+                    <li>Apache Iceberg</li>
+                    <li>MinIO (S3-compatible object storage)</li>
+                    <li>Apache Spark (Distributed processing)</li>
+                    <li>PyIceberg (Python library)</li>
+                    <li>JupyterLab (Interactive development)</li>
+                    <li>Apache Polaris & Apache Gravitino (REST catalogs)</li>
+                </ul>
+                <p class="mb-4">The project will be developed iteratively, with each stage introducing new components and functionalities, resulting in a runnable setup at the end of each phase. This staged approach is designed to simplify understanding and allow for easier troubleshooting.</p>
+                <p class="mb-4">The reliance on Docker Compose for this project underscores a significant trend in the data engineering field: the containerization of data infrastructure. This method simplifies deployment, guarantees consistency across different environments (development, testing, staging), and promotes reproducible setups. Effective management of Docker networking and volumes is crucial for the seamless interaction of these containerized services, a detail that will be carefully addressed throughout the implementation.</p>
+                <p>Furthermore, the explicit inclusion and comparison of Apache Polaris and Gravitino highlight another important evolution: the move towards open and interoperable Iceberg catalogs. The Iceberg REST Catalog API is a cornerstone of this shift, enabling diverse engines and tools to interact with a centralized metadata layer without being tightly coupled to specific storage systems or proprietary catalog implementations. This architectural choice promotes flexibility and avoids vendor lock-in, empowering organizations to select the best tools for their specific needs while maintaining a consistent view of their data. This report will therefore dedicate significant attention to the practical aspects of configuring and utilizing these REST catalogs.</p>
+            </section>
+
+            <section id="stage1" class="mb-12 bg-white p-6 rounded-lg shadow-xl">
+                <h2 class="text-3xl font-semibold mb-6 text-sky-700 border-b-2 border-sky-200 pb-3">2. Stage 1: Project Backbone - MinIO & JupyterLab with PyIceberg</h2>
+                <p class="mb-4 text-lg leading-relaxed">This section details the setup of the foundational components: MinIO for S3-compatible storage and JupyterLab with PyIceberg. You'll learn how these services are configured in Docker Compose, how to create an initial MinIO bucket, and how to set up PyIceberg within Jupyter notebooks to perform basic DDL/DML operations directly on MinIO. This stage forms the base for subsequent integrations.</p>
+                
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">2.1. Setting up MinIO</h3>
+                <p class="mb-3">MinIO provides the S3-compatible object storage. The configuration below sets up a MinIO server with persistent storage and exposes its API and console.</p>
+                <div class="code-block-title">Docker Compose for MinIO (<code>docker-compose.yml</code> snippet):</div>
+                <pre class="code-block"><code>services:
+  minio:
+    image: minio/minio:RELEASE.2023-09-07T02-05-02Z
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - "9000:9000" # S3 API
+      - "9001:9001" # MinIO Console
+    volumes:
+      - minio_data:/data
+    networks:
+      - iceberg_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"] # Corrected healthcheck
+      interval: 30s
+      timeout: 20s
+      retries: 3</code></pre>
+                <p class="mt-3 mb-3 text-sm text-slate-600">Key points: Pinned image version, persistent volume `minio_data`, healthcheck for service readiness, and network attachment to `iceberg_network`. After starting, create a bucket named `iceberg-warehouse` via the MinIO console at `http://localhost:9001`.</p>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">2.2. Configuring JupyterLab with PyIceberg</h3>
+                <p class="mb-3">JupyterLab is set up with a custom Dockerfile to include PyIceberg, Pandas, and PySpark for interactive development.</p>
+                <div class="code-block-title">Custom Dockerfile for JupyterLab (<code>jupyter/Dockerfile</code>):</div>
+                <pre class="code-block"><code>FROM jupyter/base-notebook:latest
+USER root
+USER ${NB_UID}
+RUN pip install --no-cache-dir \
+    "pyiceberg[s3fs,pyarrow]==0.6.0" \
+    "pandas==2.1.0" \
+    "pyspark==3.5.0"</code></pre>
+                <div class="code-block-title">Docker Compose for JupyterLab (<code>docker-compose.yml</code> snippet):</div>
+                <pre class="code-block"><code>services:
+  jupyterlab:
+    build:
+      context: ./jupyter
+    container_name: jupyterlab
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - ./pyiceberg_config:/home/jovyan/.pyiceberg # Optional
+    environment:
+      - JUPYTER_TOKEN=icebergdocker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - PYSPARK_PYTHON=/usr/bin/python3
+      - PYSPARK_DRIVER_PYTHON=/usr/bin/python3
+    networks:
+      - iceberg_network
+    depends_on:
+      minio:
+        condition: service_healthy</code></pre>
+                <p class="mt-3 mb-3 text-sm text-slate-600">Key points: Builds from `./jupyter/Dockerfile`, mounts local `notebooks` directory, sets Jupyter token, and includes environment variables for future Spark connectivity.</p>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">2.3. Initial `docker-compose.yml` (Version 1)</h3>
+                <p class="mb-3">The complete `docker-compose.yml` at this stage, including network and volume definitions.</p>
+                <div class="code-block-title"><code>docker-compose.yml</code> (Stage 1):</div>
+                <pre class="code-block"><code>version: '3.8'
+
+services:
+  minio:
+    image: minio/minio:RELEASE.2023-09-07T02-05-02Z
+    container_name: minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=minioadmin
+      - MINIO_ROOT_PASSWORD=minioadmin
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    volumes:
+      - minio_data:/data
+    networks:
+      - iceberg_network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:9000/minio/health/live"] # Corrected
+      interval: 30s
+      timeout: 20s
+      retries: 3
+
+  jupyterlab:
+    build:
+      context: ./jupyter
+    container_name: jupyterlab
+    ports:
+      - "8888:8888"
+    volumes:
+      - ./notebooks:/home/jovyan/work
+      - ./pyiceberg_config:/home/jovyan/.pyiceberg # Optional
+    environment:
+      - JUPYTER_TOKEN=icebergdocker
+      - SPARK_MASTER_URL=spark://spark-master:7077
+      - PYSPARK_PYTHON=/usr/bin/python3
+      - PYSPARK_DRIVER_PYTHON=/usr/bin/python3
+    networks:
+      - iceberg_network
+    depends_on:
+      minio:
+        condition: service_healthy
+
+networks:
+  iceberg_network:
+    driver: bridge
+
+volumes:
+  minio_data:</code></pre>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">2.4. PyIceberg Configuration for MinIO</h3>
+                <p class="mb-3">Example Python code for a Jupyter notebook (`01_pyiceberg_minio_basic.ipynb`) to configure PyIceberg to use MinIO with a Hadoop-style catalog.</p>
+                <div class="code-block-title">PyIceberg MinIO Configuration (Python):</div>
+                <pre class="code-block"><code>from pyiceberg.catalog import load_catalog
+from pyiceberg.schema import Schema
+from pyiceberg.types import NestedField, StringType, IntegerType
+import os
+
+catalog_name = "local_minio_catalog"
+warehouse_path = "s3a://iceberg-warehouse/"
+s3_endpoint = "http://minio:9000"
+s3_access_key_id = os.getenv("MINIO_ROOT_USER", "minioadmin")
+s3_secret_access_key = os.getenv("MINIO_ROOT_PASSWORD", "minioadmin")
+
+catalog_properties = {
+    "type": "hadoop",
+    "warehouse": warehouse_path,
+    "py-io-impl": "pyiceberg.io.fsspec.FsspecFileIO",
+    "s3.endpoint": s3_endpoint,
+    "s3.access-key-id": s3_access_key_id,
+    "s3.secret-access-key": s3_secret_access_key,
+}
+catalog = load_catalog(catalog_name, **catalog_properties)
+# ... create namespace ...</code></pre>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">2.5. Basic PyIceberg DDL and DML</h3>
+                <p class="mb-3">Examples of creating a table, appending data, and reading data using PyIceberg.</p>
+                <div class="code-block-title">PyIceberg DDL: Create Table (Python):</div>
+                <pre class="code-block"><code>table_name_pyiceberg = "default_namespace.pyiceberg_simple_table"
+simple_schema = Schema(
+    NestedField(field_id=1, name="id", field_type=IntegerType(), required=True),
+    NestedField(field_id=2, name="data", field_type=StringType(), required=False)
+)
+if catalog.table_exists(table_name_pyiceberg):
+    catalog.drop_table(table_name_pyiceberg)
+table = catalog.create_table(identifier=table_name_pyiceberg, schema=simple_schema)
+# ... print table info ...</code></pre>
+                <div class="code-block-title">PyIceberg DML: Append & Read (Python):</div>
+                <pre class="code-block"><code>import pyarrow as pa
+data_to_append = pa.Table.from_pylist([{'id': 1, 'data': 'Sample A'}, {'id': 2, 'data': 'Sample B'}])
+table.append(data_to_append)
+df_arrow = table.scan().to_arrow()
+# ... print data ...</code></pre>
+            </section>
+
+            <section id="stage2" class="mb-12 bg-white p-6 rounded-lg shadow-xl">
+                <h2 class="text-3xl font-semibold mb-6 text-sky-700 border-b-2 border-sky-200 pb-3">3. Stage 2: Integrating Apache Spark</h2>
+                <p class="mb-4 text-lg leading-relaxed">This section focuses on adding Apache Spark to the datalakehouse. It covers setting up a standalone Spark master-worker cluster using Docker Compose, including necessary Iceberg JARs, and configuring JupyterLab to connect to this Spark cluster. You'll see examples of PySpark DDL and DML operations on Iceberg tables stored in MinIO.</p>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">3.1. Spark Master-Worker Cluster Setup</h3>
+                <p class="mb-3">Adds Spark master and worker services to `docker-compose.yml`.</p>
+                <div class="code-block-title">Docker Compose for Spark (<code>docker-compose.yml</code> snippet):</div>
+                <pre class="code-block"><code>services:
+  spark-master:
+    image: apache/spark:3.5.0-python3
+    container_name: spark-master
+    hostname: spark-master
+    environment: [SPARK_MODE=master, ...] # Simplified for brevity
+    ports: ["8080:8080", "7077:7077"]
+    volumes: ["./spark_jars:/opt/spark/jars-custom", "./spark_conf:/opt/spark/conf-custom"]
+    networks: [iceberg_network]
+    depends_on: { minio: { condition: service_healthy } }
+
+  spark-worker:
+    image: apache/spark:3.5.0-python3
+    container_name: spark-worker-1
+    environment: [SPARK_MODE=worker, SPARK_MASTER_URL=spark://spark-master:7077, ...] # Simplified
+    ports: ["8081:8081"]
+    volumes: ["./spark_jars:/opt/spark/jars-custom", "./spark_conf:/opt/spark/conf-custom"]
+    networks: [iceberg_network]
+    depends_on: [spark-master]</code></pre>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">3.2. Iceberg JARs and Spark Configuration</h3>
+                <p class="mb-3">Configuring Spark with Iceberg JARs and S3/MinIO settings via `spark-defaults.conf`.</p>
+                <div class="code-block-title"><code>spark-defaults.conf</code> (in <code>./spark_conf/</code>):</div>
+                <pre class="code-block"><code>spark.sql.extensions                            org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
+spark.jars.packages                             org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.0,org.apache.iceberg:iceberg-aws-bundle:1.5.0
+spark.hadoop.fs.s3a.endpoint                    http://minio:9000
+spark.hadoop.fs.s3a.access.key                  minioadmin
+# ... other S3A and catalog properties ...
+spark.sql.catalog.minio_spark_hadoop            org.apache.iceberg.spark.SparkCatalog
+spark.sql.catalog.minio_spark_hadoop.type       hadoop
+spark.sql.catalog.minio_spark_hadoop.warehouse  s3a://iceberg-warehouse/
+spark.sql.catalog.minio_spark_hadoop.io-impl    org.apache.iceberg.aws.s3.S3FileIO</code></pre>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">3.3. PySpark Session for MinIO</h3>
+                <p class="mb-3">Example Python code in a Jupyter notebook (`02_pyspark_iceberg_minio.ipynb`) for creating a SparkSession connected to the cluster and configured for Iceberg on MinIO.</p>
+                <div class="code-block-title">PySpark Session Configuration (Python):</div>
+                <pre class="code-block"><code>from pyspark.sql import SparkSession
+import os
+spark_master_url = os.getenv("SPARK_MASTER_URL", "spark://spark-master:7077")
+spark = (SparkSession.builder
+   .appName("IcebergSparkMinIO_Stage2")
+   .master(spark_master_url)
+   .config("spark.sql.extensions", "org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions")
+   # ... other S3A and catalog configs similar to spark-defaults.conf for explicitness ...
+   .config("spark.sql.catalog.minio_spark_hadoop", "org.apache.iceberg.spark.SparkCatalog")
+   # ... more catalog properties ...
+   .getOrCreate()
+)
+spark.sql("USE minio_spark_hadoop.default_db") # Assuming default_db namespace</code></pre>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">3.4. PySpark DDL & DML with Iceberg on MinIO</h3>
+                <p class="mb-3">Examples of creating tables, inserting data, and querying using PySpark SQL.</p>
+                <div class="code-block-title">PySpark DDL: Create Table (Spark SQL):</div>
+                <pre class="code-block"><code>table_name_spark = "pyspark_simple_table"
+spark.sql(f"DROP TABLE IF EXISTS {table_name_spark}")
+spark.sql(f"""
+CREATE TABLE {table_name_spark} (
+    id INT, data STRING, category STRING, event_ts TIMESTAMP
+) USING iceberg PARTITIONED BY (category, days(event_ts)) TBLPROPERTIES ('format-version'='2')
+""")</code></pre>
+                <div class="code-block-title">PySpark DML: Insert & Query (Spark SQL):</div>
+                <pre class="code-block"><code># Using DataFrame API to insert
+# data = [...] ; columns = [...] ; insert_df = spark.createDataFrame(data, columns)
+# insert_df.writeTo(f"minio_spark_hadoop.default_db.{table_name_spark}").append()
+# Or Spark SQL INSERT
+spark.sql(f"INSERT INTO {table_name_spark} VALUES (1, 'Event A', 'alpha', timestamp('2023-10-01 10:00:00'))")
+results_df = spark.sql(f"SELECT * FROM {table_name_spark} ORDER BY id")
+results_df.show()</code></pre>
+            </section>
+
+            <section id="stage3" class="mb-12 bg-white p-6 rounded-lg shadow-xl">
+                <h2 class="text-3xl font-semibold mb-6 text-sky-700 border-b-2 border-sky-200 pb-3">4. Stage 3: Apache Polaris Integration</h2>
+                <p class="mb-4 text-lg leading-relaxed">This section covers the integration of Apache Polaris, a REST-based Iceberg catalog. It explains the Docker Compose setup for Polaris (potentially with a PostgreSQL backend), how to configure Polaris to manage catalogs on MinIO, and how to interact with these Polaris-managed tables using both PyIceberg and PySpark.</p>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">4.1. Polaris Docker Compose Configuration</h3>
+                <p class="mb-3">Adds Polaris server and an optional PostgreSQL database for its metadata to `docker-compose.yml`.</p>
+                 <div class="code-block-title">Docker Compose for Polaris (<code>docker-compose.yml</code> snippet):</div>
+                <pre class="code-block"><code>services:
+  polaris-db: # Optional PostgreSQL backend for Polaris
+    image: postgres:15
+    container_name: polaris-db
+    # ... environment, ports, volumes ...
+    networks: [iceberg_network]
+    healthcheck: {test: ["CMD-SHELL", "pg_isready -U polaris -d polaris_db"], ...}
+
+
+  polaris:
+    image: apache/polaris:nightly # Placeholder, use actual stable image
+    container_name: polaris-server
+    ports: ["8181:8181"]
+    environment:
+      - POLARIS_PERSISTENCE_TYPE=eclipselink # For PostgreSQL
+      - POLARIS_PERSISTENCE_JDBC_URL=jdbc:postgresql://polaris-db:5432/polaris_db
+      # ... other Polaris env vars for DB credentials, bootstrap auth ...
+    networks: [iceberg_network]
+    depends_on: { minio: {condition: service_healthy}, polaris-db: {condition: service_healthy} }</code></pre>
+                <p class="mt-3 mb-3 text-sm text-slate-600">After Polaris starts, a catalog (e.g., `polaris_minio_catalog`) pointing to MinIO needs to be created via its API/CLI. Example CLI (conceptual):</p>
+                <pre class="code-block"><code># docker exec polaris-server ./polaris-cli catalogs create \
+#    --name polaris_minio_catalog --storage-type S3 \
+#    --default-base-location s3a://iceberg-warehouse/polaris_catalog_data/ \
+#    --s3.endpoint http://minio:9000 ... (other S3 args)</code></pre>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">4.2. PyIceberg with Polaris</h3>
+                <p class="mb-3">Configuring PyIceberg to use the Polaris REST catalog.</p>
+                <div class="code-block-title">PyIceberg REST Catalog for Polaris (Python in <code>04a_pyiceberg_polaris.ipynb</code>):</div>
+                <pre class="code-block"><code>polaris_uri = "http://polaris-server:8181"
+polaris_client_id = "polaris_user"
+polaris_client_secret = "polaris_secret"
+polaris_catalog_props = {
+    "type": "rest", "uri": polaris_uri,
+    "credential": f"{polaris_client_id}:{polaris_client_secret}",
+    "s3.endpoint": "http://minio:9000", # For FileIO
+    # ... other S3 and py-io-impl properties ...
+}
+polaris_catalog = load_catalog("pyiceberg_polaris", **polaris_catalog_props)
+# ... create namespace (e.g., ("polaris_minio_catalog", "pyiceberg_ns")) ...
+# ... create table (e.g., ("polaris_minio_catalog", "pyiceberg_ns", "my_table")) ...</code></pre>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">4.3. PySpark with Polaris</h3>
+                <p class="mb-3">Configuring PySpark to use Polaris as its Iceberg catalog.</p>
+                <div class="code-block-title">PySpark REST Catalog for Polaris (Python in <code>05a_pyspark_polaris.ipynb</code>):</div>
+                <pre class="code-block"><code>polaris_uri_spark = "http://polaris-server:8181/iceberg" # Often with /iceberg suffix for Spark
+polaris_warehouse_identifier = "polaris_minio_catalog" # Catalog name *in* Polaris
+
+spark_polaris = (SparkSession.builder
+   .appName("IcebergSparkPolaris")
+   # ... common Spark configs ...
+   .config(f"spark.sql.catalog.{polaris_warehouse_identifier}", "org.apache.iceberg.spark.SparkCatalog")
+   .config(f"spark.sql.catalog.{polaris_warehouse_identifier}.type", "rest")
+   .config(f"spark.sql.catalog.{polaris_warehouse_identifier}.uri", polaris_uri_spark)
+   .config(f"spark.sql.catalog.{polaris_warehouse_identifier}.credential", f"{polaris_client_id}:{polaris_client_secret}")
+   # ... S3 and io-impl settings for this catalog ...
+   .getOrCreate()
+)
+spark_polaris.sql(f"USE {polaris_warehouse_identifier}.spark_ns") # Use namespace in Polaris catalog
+# ... DDL/DML operations using fully qualified names like polaris_minio_catalog.spark_ns.table ...</code></pre>
+            </section>
+
+            <section id="stage4" class="mb-12 bg-white p-6 rounded-lg shadow-xl">
+                <h2 class="text-3xl font-semibold mb-6 text-sky-700 border-b-2 border-sky-200 pb-3">5. Stage 4: Apache Gravitino Integration</h2>
+                <p class="mb-4 text-lg leading-relaxed">This section details the integration of Apache Gravitino, another REST-based catalog with a broader aim for unified metadata management. It includes Gravitino's Docker Compose setup, configuration for its Iceberg REST service to use MinIO, and examples of using PyIceberg and PySpark with Gravitino.</p>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">5.1. Gravitino Docker Compose Configuration</h3>
+                <p class="mb-3">Adds Gravitino server to `docker-compose.yml`, potentially with its own backend DB and specific configuration for its Iceberg REST service.</p>
+                 <div class="code-block-title">Docker Compose for Gravitino (<code>docker-compose.yml</code> snippet):</div>
+                <pre class="code-block"><code>services:
+  # gravitino-backend-db: (Optional, similar to polaris-db)
+
+  gravitino:
+    image: apache/gravitino:0.6.0-incubating # Use a recent stable version
+    container_name: gravitino-server
+    ports: ["8090:8090", "8091:8091"] # Main server and hypothetical Iceberg REST port
+    volumes:
+      - ./gravitino_config/gravitino.conf:/opt/gravitino/conf/gravitino.conf
+      - ./spark_jars/iceberg-aws-bundle-1.5.0.jar:/opt/gravitino/iceberg-rest-server/libs/iceberg-aws-bundle-1.5.0.jar
+    # ... environment variables for DB if used ...
+    networks: [iceberg_network]
+    depends_on: { minio: {condition: service_healthy} }</code></pre>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">5.2. Gravitino Configuration for MinIO</h3>
+                <p class="mb-3">Key settings in `gravitino.conf` to configure its Iceberg REST service for MinIO.</p>
+                <div class="code-block-title"><code>gravitino.conf</code> (in <code>./gravitino_config/</code> snippet):</div>
+                <pre class="code-block"><code># Gravitino Iceberg REST Service Configuration
+gravitino.iceberg-rest.port = 8091 # Or part of main port
+gravitino.iceberg-rest.catalog-backend = jdbc
+gravitino.iceberg-rest.uri = jdbc:h2:mem:gravitino_iceberg_meta;DB_CLOSE_DELAY=-1 # H2 for Iceberg metadata
+gravitino.iceberg-rest.warehouse = s3a://iceberg-warehouse/gravitino_default_catalog/
+gravitino.iceberg-rest.io-impl = org.apache.iceberg.aws.s3.S3FileIO
+gravitino.iceberg-rest.s3-endpoint = http://minio:9000
+# ... other S3 credentials for Gravitino's Iceberg service ...</code></pre>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">5.3. PyIceberg with Gravitino</h3>
+                <p class="mb-3">Configuring PyIceberg for Gravitino's REST catalog.</p>
+                <div class="code-block-title">PyIceberg REST Catalog for Gravitino (Python in <code>04b_pyiceberg_gravitino.ipynb</code>):</div>
+                <pre class="code-block"><code>gravitino_iceberg_rest_uri = "http://gravitino-server:8090/iceberg/" # Or port 8091
+gravitino_catalog_props = {
+    "type": "rest", "uri": gravitino_iceberg_rest_uri,
+    "s3.endpoint": "http://minio:9000", # For PyIceberg's FileIO
+    # ... other S3 and py-io-impl properties ...
+}
+gravitino_catalog = load_catalog("pyiceberg_gravitino", **gravitino_catalog_props)
+# ... create namespace (e.g., "pyiceberg_db_gravitino") ...
+# ... create table (e.g., ("pyiceberg_db_gravitino", "my_table")) ...</code></pre>
+
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">5.4. PySpark with Gravitino</h3>
+                <p class="mb-3">Configuring PySpark for Gravitino's Iceberg REST catalog.</p>
+                <div class="code-block-title">PySpark REST Catalog for Gravitino (Python in <code>05b_pyspark_gravitino.ipynb</code>):</div>
+                <pre class="code-block"><code>gravitino_spark_rest_uri = "http://gravitino-server:8090/iceberg/" # Or port 8091
+gravitino_spark_catalog_name = "gravitino_rest_spark"
+
+spark_gravitino = (SparkSession.builder
+   .appName("IcebergSparkGravitino")
+   # ... common Spark configs ...
+   .config(f"spark.sql.catalog.{gravitino_spark_catalog_name}", "org.apache.iceberg.spark.SparkCatalog")
+   .config(f"spark.sql.catalog.{gravitino_spark_catalog_name}.type", "rest")
+   .config(f"spark.sql.catalog.{gravitino_spark_catalog_name}.uri", gravitino_spark_rest_uri)
+   # ... S3 and io-impl settings for this Spark catalog ...
+   .getOrCreate()
+)
+spark_gravitino.sql(f"USE {gravitino_spark_catalog_name}.spark_db_gravitino")
+# ... DDL/DML operations ...</code></pre>
+            </section>
+
+            <section id="stage5" class="mb-12 bg-white p-6 rounded-lg shadow-xl">
+                <h2 class="text-3xl font-semibold mb-6 text-sky-700 border-b-2 border-sky-200 pb-3">6. Stage 5: Comparing Apache Polaris and Gravitino</h2>
+                <p class="mb-4 text-lg leading-relaxed">This section provides a comparative analysis of Apache Polaris and Gravitino. It covers their feature sets, ease of setup in Docker, MinIO integration specifics, client (Spark/PyIceberg) integration, and community/maturity aspects. The goal is to help understand the nuances and choose the right REST catalog for different needs.</p>
+                <div class="overflow-x-auto mt-6">
+                    <table class="min-w-full divide-y divide-slate-300 border border-slate-300 rounded-md">
+                        <thead class="bg-slate-100">
+                            <tr>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Feature Aspect</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Apache Polaris</th>
+                                <th class="px-6 py-3 text-left text-xs font-semibold text-slate-600 uppercase tracking-wider">Apache Gravitino</th>
+                            </tr>
+                        </thead>
+                        <tbody class="bg-white divide-y divide-slate-200">
+                            <tr>
+                                <td class="px-6 py-4 whitespace-normal text-sm font-medium text-slate-800">Primary Focus</td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-slate-600">Iceberg-native REST catalog, governance features.</td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-slate-600">Unified metadata lake (Metalakes), Iceberg REST as a component.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-normal text-sm font-medium text-slate-800">Metadata Backend (for Iceberg)</td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-slate-600">PostgreSQL, in-memory.</td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-slate-600">Gravitino Server: H2, PostgreSQL/MySQL. Iceberg Service: Memory, JDBC, Hive.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-normal text-sm font-medium text-slate-800">Governance (RBAC)</td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-slate-600">Integrated design goal.</td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-slate-600">Planned as part of unified security.</td>
+                            </tr>
+                             <tr>
+                                <td class="px-6 py-4 whitespace-normal text-sm font-medium text-slate-800">MinIO Config for Tables</td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-slate-600">Per-catalog properties set via Polaris API/CLI during catalog creation.</td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-slate-600">In Gravitino server config (`gravitino.conf`) for its Iceberg REST service.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-normal text-sm font-medium text-slate-800">Client Authentication</td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-slate-600">Typically OAuth2 (client ID/secret).</td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-slate-600">Depends on Gravitino's security setup; can be simpler or token-based.</td>
+                            </tr>
+                            <tr>
+                                <td class="px-6 py-4 whitespace-normal text-sm font-medium text-slate-800">Maturity (Apache)</td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-slate-600">Incubating (originated from Snowflake).</td>
+                                <td class="px-6 py-4 whitespace-normal text-sm text-slate-600">Incubating (originated from Datastrato).</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <p class="mt-4 text-sm text-slate-600">Both are evolving Apache Incubator projects. The choice depends on whether the primary need is a dedicated Iceberg catalog (Polaris) or a broader unified metadata system (Gravitino).</p>
+            </section>
+
+            <section id="stage6" class="mb-12 bg-white p-6 rounded-lg shadow-xl">
+                <h2 class="text-3xl font-semibold mb-6 text-sky-700 border-b-2 border-sky-200 pb-3">7. Stage 6: Iceberg Feature Demonstrations</h2>
+                <p class="mb-4 text-lg leading-relaxed">This section showcases key Apache Iceberg features like schema evolution, hidden partitioning, time travel, data compaction, filter pushdown, and other DML operations. These examples are intended to be run in a PySpark Jupyter notebook (`03_iceberg_features_pyspark.ipynb`) connected to one of the configured catalogs.</p>
+
+                <div class="feature mb-8 p-4 border border-slate-200 rounded-md bg-slate-50">
+                    <h4 class="text-xl font-semibold text-teal-700 mb-2">7.1. Schema Evolution</h4>
+                    <p class="text-sm mb-3 text-slate-600">Demonstrates adding, renaming, changing types, and dropping columns without rewriting data.</p>
+                    <div class="code-block-title">PySpark Example (Schema Evolution):</div>
+                    <pre class="code-block"><code># Create a demo table
+# spark.sql("CREATE TABLE schema_evolution_demo_table (id INT, name STRING, price DOUBLE) USING iceberg")
+# spark.sql("INSERT INTO schema_evolution_demo_table VALUES (1, 'Laptop', 1200.00)")
+
+# Add column
+spark.sql("ALTER TABLE schema_evolution_demo_table ADD COLUMN category STRING")
+# Rename column
+spark.sql("ALTER TABLE schema_evolution_demo_table RENAME COLUMN name TO product_name")
+# Drop column
+spark.sql("ALTER TABLE schema_evolution_demo_table DROP COLUMN price")</code></pre>
+                </div>
+
+                <div class="feature mb-8 p-4 border border-slate-200 rounded-md bg-slate-50">
+                    <h4 class="text-xl font-semibold text-teal-700 mb-2">7.2. Hidden Partitioning</h4>
+                    <p class="text-sm mb-3 text-slate-600">Partitions by transformed column values (e.g., `days(event_ts)`) without exposing transformed columns directly.</p>
+                    <div class="code-block-title">PySpark Example (Hidden Partitioning):</div>
+                    <pre class="code-block"><code># spark.sql("DROP TABLE IF EXISTS hidden_partitioning_demo")
+spark.sql("""
+CREATE TABLE hidden_partitioning_demo (id INT, event_ts TIMESTAMP, category STRING)
+USING iceberg PARTITIONED BY (days(event_ts), category)
+""")
+# Queries filter on 'event_ts', Iceberg uses hidden partition 'event_ts_day'.</code></pre>
+                </div>
+
+                <div class="feature mb-8 p-4 border border-slate-200 rounded-md bg-slate-50">
+                    <h4 class="text-xl font-semibold text-teal-700 mb-2">7.3. Snapshotting and Time Travel</h4>
+                    <p class="text-sm mb-3 text-slate-600">Accessing historical states of the table using snapshot IDs or timestamps.</p>
+                    <div class="code-block-title">PySpark Example (Time Travel):</div>
+                    <pre class="code-block"><code># Assume 'time_travel_demo' table exists and has multiple snapshots
+# first_snapshot_id = spark.sql("SELECT snapshot_id FROM time_travel_demo.snapshots ORDER BY committed_at ASC LIMIT 1").first()["snapshot_id"]
+# Query a specific snapshot ID
+# spark.read.option("snapshot-id", first_snapshot_id).table("time_travel_demo").show()
+# Query as of a timestamp (Spark 3.3+)
+# spark.sql("SELECT * FROM time_travel_demo TIMESTAMP AS OF 'your_timestamp_string'").show()</code></pre>
+                </div>
+                
+                <div class="feature mb-8 p-4 border border-slate-200 rounded-md bg-slate-50">
+                    <h4 class="text-xl font-semibold text-teal-700 mb-2">7.4. Data Compaction</h4>
+                    <p class="text-sm mb-3 text-slate-600">Rewriting small data files into fewer, larger ones using `rewrite_data_files`.</p>
+                    <div class="code-block-title">PySpark Example (Data Compaction):</div>
+                    <pre class="code-block"><code># Assume 'compaction_demo_table' exists with many small files
+# spark.sql("CALL system.rewrite_data_files(table => 'default_db.compaction_demo_table')").show()
+# Note: Procedure name might need full catalog qualification, e.g., catalog_name.system.rewrite_data_files</code></pre>
+                </div>
+
+                <div class="feature mb-8 p-4 border border-slate-200 rounded-md bg-slate-50">
+                    <h4 class="text-xl font-semibold text-teal-700 mb-2">7.5. Filter Pushdown</h4>
+                    <p class="text-sm mb-3 text-slate-600">Query engines use Iceberg metadata (min/max values) to prune files, reducing data read. Check `EXPLAIN` plan.</p>
+                    <div class="code-block-title">PySpark Example (Filter Pushdown):</div>
+                    <pre class="code-block"><code># Assume 'filter_pushdown_demo' table exists
+# query = "SELECT * FROM filter_pushdown_demo WHERE category = 'A' AND value > 15.0"
+# spark.sql(query).explain(extended=True) # Look for PushedFilters in plan</code></pre>
+                </div>
+                
+                <div class="feature mb-8 p-4 border border-slate-200 rounded-md bg-slate-50">
+                    <h4 class="text-xl font-semibold text-teal-700 mb-2">7.6. Other DML (UPDATE, DELETE, MERGE)</h4>
+                    <p class="text-sm mb-3 text-slate-600">Row-level operations, typically requiring format version 2.</p>
+                    <div class="code-block-title">PySpark Example (DML):</div>
+                    <pre class="code-block"><code># Assume 'dml_operations_demo' table exists with format-version='2'
+# UPDATE
+# spark.sql("UPDATE dml_operations_demo SET status = 'super_active' WHERE name = 'Alice'")
+# DELETE
+# spark.sql("DELETE FROM dml_operations_demo WHERE status = 'inactive'")
+# MERGE INTO (with a source_updates temp view)
+# spark.sql("""MERGE INTO dml_operations_demo t USING source_updates s ON t.id = s.id
+# WHEN MATCHED THEN UPDATE SET ... WHEN NOT MATCHED THEN INSERT ...""")</code></pre>
+                </div>
+            </section>
+
+            <section id="stage7" class="mb-12 bg-white p-6 rounded-lg shadow-xl">
+                <h2 class="text-3xl font-semibold mb-6 text-sky-700 border-b-2 border-sky-200 pb-3">8. Stage 7: Project Structure and Documentation Guide</h2>
+                <p class="mb-4 text-lg leading-relaxed">This section provides an overview of the final project directory structure. In a complete project, it would also include comprehensive instructions for building and running the Docker environment, accessing services, using notebooks, and troubleshooting tips. This SPA focuses on presenting the report's content.</p>
+                <h3 class="text-2xl font-medium mb-3 mt-5 text-sky-600">8.1. Final Project Directory Structure (Conceptual)</h3>
+                <pre class="code-block"><code>iceberg-datalakehouse-rest-catalogs/
+├── docker-compose.yml
+├── jupyter/
+│   └── Dockerfile
+├── notebooks/
+│   ├── 00_pyiceberg_setup.ipynb
+│   ├── 01_pyiceberg_minio_basic.ipynb
+│   ├── 02_pyspark_iceberg_minio.ipynb
+│   ├── 03_iceberg_features_pyspark.ipynb
+│   ├── 04a_pyiceberg_polaris.ipynb
+│   ├── 04b_pyiceberg_gravitino.ipynb
+│   ├── 05a_pyspark_polaris.ipynb
+│   ├── 05b_pyspark_gravitino.ipynb
+├── spark_conf/
+│   └── spark-defaults.conf
+├── spark_jars/             # For manually added JARs
+├── polaris_config/         # Polaris specific configurations (if any)
+├── gravitino_config/
+│   └── gravitino.conf
+├── README.md
+└── .gitignore</code></pre>
+                <p class="mt-4 text-sm text-slate-600">The actual project would contain detailed READMEs, build scripts, and complete notebook implementations for each step.</p>
+            </section>
+
+            <section id="chart" class="mb-12 bg-white p-6 rounded-lg shadow-xl">
+                <h2 class="text-3xl font-semibold mb-6 text-sky-700 border-b-2 border-sky-200 pb-3">9. Conceptual Component Configuration Overview</h2>
+                 <p class="mb-6 text-lg leading-relaxed">This chart offers a conceptual visualization of the relative number of key configuration areas or files involved in setting up each major component of the datalakehouse, based on the details in the report. This is a simplified representation to give a high-level sense of where configuration efforts are focused. "Config Points" refer to distinct configuration files, significant blocks of settings within Docker Compose, or key API/CLI setup steps.</p>
+                <div class="chart-container">
+                    <canvas id="componentComplexityChart"></canvas>
+                </div>
+            </section>
+
+        </main>
+    </div>
+
+    <script>
+        // Chart.js: Conceptual Component Configuration Points
+        const ctx = document.getElementById('componentComplexityChart').getContext('2d');
+        const componentComplexityChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['MinIO', 'JupyterLab (Base)', 'Spark Cluster', 'Iceberg (Hadoop Cat.)', 'Polaris Server', 'Gravitino Server'],
+                datasets: [{
+                    label: 'Conceptual Config Points',
+                    data: [2, 2, 4, 3, 5, 5], // Illustrative data based on report descriptions
+                                              // MinIO: docker-compose, bucket creation
+                                              // Jupyter: Dockerfile, docker-compose
+                                              // Spark: docker-compose (master/worker), spark-defaults, jars
+                                              // Iceberg (Hadoop): SparkSession/PyIceberg catalog props
+                                              // Polaris: docker-compose, DB (opt), API/CLI for catalog, server config
+                                              // Gravitino: docker-compose, gravitino.conf (server + Iceberg REST), jars
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.7)',  // sky-500
+                        'rgba(16, 185, 129, 0.7)',  // emerald-500
+                        'rgba(249, 115, 22, 0.7)',  // orange-500
+                        'rgba(14, 165, 233, 0.7)',  // cyan-500
+                        'rgba(139, 92, 246, 0.7)',  // violet-500
+                        'rgba(236, 72, 153, 0.7)'   // pink-500
+                    ],
+                    borderColor: [
+                        'rgba(59, 130, 246, 1)',
+                        'rgba(16, 185, 129, 1)',
+                        'rgba(249, 115, 22, 1)',
+                        'rgba(14, 165, 233, 1)',
+                        'rgba(139, 92, 246, 1)',
+                        'rgba(236, 72, 153, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        title: {
+                            display: true,
+                            text: 'Number of Key Config Areas/Files',
+                            font: { size: 14, weight: '500' },
+                            color: '#475569' // slate-600
+                        },
+                        ticks: { color: '#64748B' } // slate-500
+                    },
+                    x: {
+                         title: {
+                            display: true,
+                            text: 'Datalakehouse Components',
+                            font: { size: 14, weight: '500' },
+                            color: '#475569' // slate-600
+                        },
+                        ticks: { 
+                            color: '#64748B', // slate-500
+                            font: { size: 11 } 
+                        }
+                    }
+                },
+                plugins: {
+                    legend: {
+                        display: false 
+                    },
+                    title: {
+                        display: true,
+                        text: 'Conceptual Component Configuration Overview',
+                        font: { size: 18, weight: '600' },
+                        color: '#334155', // slate-700
+                        padding: { top: 10, bottom: 20 }
+                    },
+                    tooltip: {
+                        backgroundColor: 'rgba(0,0,0,0.7)',
+                        titleFont: { size: 14 },
+                        bodyFont: { size: 12 },
+                        callbacks: {
+                            label: function(context) {
+                                let label = context.dataset.label || '';
+                                if (label) {
+                                    label += ': ';
+                                }
+                                if (context.parsed.y !== null) {
+                                    label += context.parsed.y + ' key areas';
+                                }
+                                return label;
+                            }
+                        }
+                    }
+                }
+            }
+        });
+
+        // Optional: Simple active link highlighting for sidebar (can be expanded)
+        // window.addEventListener('scroll', () => {
+        //     let current = '';
+        //     const sections = document.querySelectorAll('main section');
+        //     const navLinks = document.querySelectorAll('nav a.sidebar-link');
+            
+        //     sections.forEach(section => {
+        //         const sectionTop = section.offsetTop;
+        //         if (pageYOffset >= sectionTop - 60) { // 60px offset
+        //             current = section.getAttribute('id');
+        //         }
+        //     });
+
+        //     navLinks.forEach(link => {
+        //         link.classList.remove('active');
+        //         if (link.getAttribute('href').includes(current)) {
+        //             link.classList.add('active');
+        //         }
+        //     });
+        // });
+
+    </script>
+</body>
+</html>
