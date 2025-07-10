@@ -22,7 +22,7 @@ fs.native-s3.enabled: true
 iceberg.catalog.type: jdbc
 iceberg.jdbc-catalog.driver-class: org.postgresql.Driver
 iceberg.jdbc-catalog.catalog-name: iceberg_catalog
-iceberg.jdbc-catalog.connection-url: jdbc:postgresql://postgres_catalog:5432/iceberg_catalog
+iceberg.jdbc-catalog.connection-url: jdbc:postgresql://postgres:5432/iceberg_catalog
 iceberg.jdbc-catalog.connection-user: iceberg
 iceberg.jdbc-catalog.connection-password: icebergpassword
 iceberg.jdbc-catalog.default-warehouse-dir: s3a://iceberg-warehouse/

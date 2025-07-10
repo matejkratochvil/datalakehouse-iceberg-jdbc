@@ -17,7 +17,7 @@ RUN apt-get update --yes && \
     apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # If spark_version is not set, latest Spark will be installed
-ARG spark_version="3.5.3"
+ARG spark_version="3.5.6"
 ARG hadoop_version="3"
 # If scala_version is not set, Spark without Scala will be installed
 ARG scala_version="2.12"

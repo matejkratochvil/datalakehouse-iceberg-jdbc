@@ -12,16 +12,14 @@ from pyiceberg.catalog import load_catalog
 catalog = load_catalog(
     "iceberg_jdbc",
     type="sql",
-    uri=f"postgresql+psycopg2://{sql_user}:{sql_password}@postgres_catalog:5432/iceberg_catalog",
+    uri=f"postgresql+psycopg2://{sql_user}:{sql_password}@postgres:5432/iceberg_catalog",
     warehouse="s3://iceberg-warehouse/",
     s3_endpoint="http://minio:9000",
     s3_access_key_id="admin",
     s3_secret_access_key="password",
     s3_path_style_access=True,
     s3_region="eu-central-1
-    "region_name": <aws region>,
-    "aws_access_key_id": <aws access_key>,
-    "aws_secret_access_key": <aws secret key>,
+
 )
 
 

@@ -17,3 +17,6 @@ notebooks/testdata/consuption/ConsumptionIndustry9.json
 notebooks/testdata/consuption/ConsumptionIndustry10.json
 notebooks/testdata/consuption/ConsumptionIndustry11.json
 notebooks/testdata/consuption/ConsumptionIndustry100.json
+/.idea/
+/.vscode/
+notebooks/testdata/
