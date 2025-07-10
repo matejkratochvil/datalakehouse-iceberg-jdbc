@@ -124,7 +124,7 @@ services:
     # image: quay.io/jupyter/pyspark-notebook:spark-3.5.6
     # container_name: jupyterlab
     ports:
-      - "8888:8888" # JupyterLab UI
+      - "18888:8888" # JupyterLab UI
       - "14040:4040" # Spark UI for PySpark driver
       - "14041:4041"
       - "14042:4042"
@@ -156,7 +156,7 @@ services:
         --conf spark.hadoop.fs.s3a.connection.ssl.enabled=false
         --conf spark.driver.extraJavaOptions="-Daws.region=eu-central-1 -Daws.overrideDefaultRegion=true"
         --conf spark.executor.extraJavaOptions="-Daws.region=eu-central-1 -Daws.overrideDefaultRegion=true"
-        --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.9.1,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.6.0
+        --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.9.1,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.6.0,org.apache.spark:spark-avro_2.12:3.5.6
         pyspark-shell
     depends_on:
       - trino-coordinator
