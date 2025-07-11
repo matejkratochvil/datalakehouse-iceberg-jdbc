@@ -10,7 +10,7 @@ sql_password="icebergpassword"
 from pyiceberg.catalog import load_catalog
 
 catalog = load_catalog(
-    "iceberg_jdbc",
+    "iceberg_catalog",
     type="sql",
     uri=f"postgresql+psycopg2://{sql_user}:{sql_password}@postgres:5432/iceberg_catalog",
     warehouse="s3://iceberg-warehouse/",
@@ -18,8 +18,7 @@ catalog = load_catalog(
     s3_access_key_id="admin",
     s3_secret_access_key="password",
     s3_path_style_access=True,
-    s3_region="eu-central-1
-
+    s3_region="eu-central-1"
 )
 
 

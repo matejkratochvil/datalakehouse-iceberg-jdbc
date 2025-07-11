@@ -14,9 +14,9 @@ from pyflink.table.types import RowType, ecológicaRecordType # For schema defin
 MINIO_ENDPOINT = "http://minio:9000"
 MINIO_ACCESS_KEY = "admin"
 MINIO_SECRET_KEY = "password"
-ICEBERG_JDBC_URL = "jdbc:postgresql://postgres:5432/iceberg_catalog"
-ICEBERG_JDBC_USER = "iceberg"
-ICEBERG_JDBC_PASSWORD = "icebergpassword"
+iceberg_catalog_URL = "jdbc:postgresql://postgres:5432/iceberg_catalog"
+iceberg_catalog_USER = "iceberg"
+iceberg_catalog_PASSWORD = "icebergpassword"
 ICEBERG_WAREHOUSE_PATH = "s3a://iceberg-warehouse/" # Root for this catalog
 ```
 
@@ -77,9 +77,9 @@ CREATE CATALOG {FLINK_ICEBERG_CATALOG_NAME}
 WITH (
     'type'='iceberg',
     'catalog-type'='jdbc',
-    'uri'='{ICEBERG_JDBC_URL}',
-    'jdbc.user'='{ICEBERG_JDBC_USER}',
-    'jdbc.password'='{ICEBERG_JDBC_PASSWORD}',
+    'uri'='{iceberg_catalog_URL}',
+    'jdbc.user'='{iceberg_catalog_USER}',
+    'jdbc.password'='{iceberg_catalog_PASSWORD}',
     'warehouse'='{ICEBERG_WAREHOUSE_PATH}',
     'property-version'='1'
 )
@@ -259,7 +259,7 @@ you typically use the Iceberg Java API or use Spark/Trino connected to the same 
 - For example, to see snapshots, you'd use Trino or Spark as in other notebooks.
 - To inspect Iceberg table metadata (snapshots, files, etc.):
   - Use Trino: `SELECT * FROM iceberg.flink_schema."sensor_readings$history"`
-  - Or Spark: `spark.sql(f"SELECT * FROM iceberg_jdbc.flink_schema.sensor_readings.history").show()`
+  - Or Spark: `spark.sql(f"SELECT * FROM iceberg_catalog.flink_schema.sensor_readings.history").show()`
 
 ## Compaction / Maintenance
 
@@ -271,7 +271,7 @@ you typically use the Iceberg Java API or use Spark/Trino connected to the same 
 Example Spark command from notebook 02:
 
 ```py
-spark.sql(f"CALL iceberg_jdbc.system.rewrite_data_files(table => 'flink_schema.sensor_readings', strategy => 'sort')").show()
+spark.sql(f"CALL iceberg_catalog.system.rewrite_data_files(table => 'flink_schema.sensor_readings', strategy => 'sort')").show()
 ```
 
 ## Schema Evolution (Example: Add a new column via Flink SQL)
