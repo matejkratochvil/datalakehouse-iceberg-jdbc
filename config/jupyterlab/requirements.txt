@@ -1,6 +1,8 @@
-pyiceberg[pyarrow,duckdb,pandas]
+pyiceberg[pyarrow,duckdb,pandas,sql-postgres,s3fs,rest,sql-sqlite]==0.9.1
 pandas
 trino
 sqlalchemy
 pyarrow
-pyspark==3.5.3
+pyspark==3.5.6
+minio
+fastavro

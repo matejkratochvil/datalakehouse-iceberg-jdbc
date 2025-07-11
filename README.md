@@ -27,14 +27,15 @@ docker-compose up -d
     * **MinIO Console:** [http://localhost:9001](http://localhost:9001) (Credentials: `admin`/`password`)
         * You should see the `iceberg-warehouse` bucket created.
     * **Trino UI:** [http://localhost:8080](http://localhost:8080)
-    * **JupyterLab:** [http://localhost:8888](http://localhost:8888) (Token: `icebergrocks`)
-        * Navigate to the `work/` directory to find the notebooks.
+    * **JupyterLab:** [http://localhost:18888](http://localhost:18888) (Token: `icebergrocks`)
+        * Navigate to the `notebooks/` directory to find the notebooks.
     * **PostgreSQL:** Can be accessed on `localhost:5432` (Credentials: `iceberg`/`icebergpassword`,
       Database: `iceberg_catalog`)
     * **Flink UI:** [http://localhost:8081](http://localhost:8081)
+    * **Spark UI:** [http://localhost:14040](http://localhost:14040)
 
-4. **Run the Jupyter Notebook:**
-    * Open `01-trino-iceberg-getting-started.ipynb` in JupyterLab.
+4. **Run the Jupyter Notebooks:**
+    * Open either `01-trino-iceberg-getting-started.ipynb` in JupyterLab.
     * Execute the cells to create schemas, tables, insert data, and query using Trino.
 
 ## Teardown
@@ -85,8 +86,6 @@ streams them into an Iceberg table using Flink. More information in `flink/java-
     docker exec -it flink-jobmanager bash -c "flink cancel f5467dbf8459b4f7f5c0df52ecbc4aa3"
     ```
 
-TODO: update this readme
-
 ## Phase 2: Add Spark service with Iceberg configuration.
    * **Spark standalone master-worker services**
    * + examples
@@ -95,7 +94,7 @@ TODO: update this readme
    * **Flink JobManager-TaskManager services**
    * + java example + pyflink script
 
-TODO: 
-Add pyiceberg examples
+## Phase 4: pyiceberg
+
 
 ---

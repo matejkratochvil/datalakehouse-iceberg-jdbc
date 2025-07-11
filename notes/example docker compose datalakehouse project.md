@@ -754,12 +754,12 @@ services:
         --conf spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
         --conf spark.sql.catalog.spark_catalog=org.apache.iceberg.spark.SparkSessionCatalog
         --conf spark.sql.catalog.spark_catalog.type=hive # Will be overridden by JDBC specific settings
-        --conf spark.sql.catalog.iceberg_jdbc.type=jdbc
-        --conf spark.sql.catalog.iceberg_jdbc.uri=jdbc:postgresql://postgres_catalog:5432/iceberg_catalog
-        --conf spark.sql.catalog.iceberg_jdbc.jdbc.user=iceberg
-        --conf spark.sql.catalog.iceberg_jdbc.jdbc.password=icebergpassword
-        --conf spark.sql.catalog.iceberg_jdbc.driver=org.postgresql.Driver
-        --conf spark.sql.catalog.iceberg_jdbc.warehouse=s3a://iceberg-warehouse/  # Default S3 warehouse for this catalog
+        --conf spark.sql.catalog.iceberg_catalog.type=jdbc
+        --conf spark.sql.catalog.iceberg_catalog.uri=jdbc:postgresql://postgres_catalog:5432/iceberg_catalog
+        --conf spark.sql.catalog.iceberg_catalog.jdbc.user=iceberg
+        --conf spark.sql.catalog.iceberg_catalog.jdbc.password=icebergpassword
+        --conf spark.sql.catalog.iceberg_catalog.driver=org.postgresql.Driver
+        --conf spark.sql.catalog.iceberg_catalog.warehouse=s3a://iceberg-warehouse/  # Default S3 warehouse for this catalog
         --conf spark.hadoop.fs.s3a.endpoint=http://minio:9000
         --conf spark.hadoop.fs.s3a.access.key=admin
         --conf spark.hadoop.fs.s3a.secret.key=password
@@ -792,19 +792,19 @@ Key Changes in docker-compose.yml:
 * JupyterLab PYSPARK_SUBMIT_ARGS: This is crucial. It configures the PySpark session created within JupyterLab:
   * --master spark://spark-master:7077: Connects to our Spark cluster.
   * Iceberg SQL Extensions: spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
-  * Iceberg JDBC Catalog (iceberg_jdbc):
-    * spark.sql.catalog.iceberg_jdbc.type=jdbc
-    * spark.sql.catalog.iceberg_jdbc.uri=jdbc:postgresql://postgres_catalog:5432/iceberg_catalog
+  * Iceberg JDBC Catalog (iceberg_catalog):
+    * spark.sql.catalog.iceberg_catalog.type=jdbc
+    * spark.sql.catalog.iceberg_catalog.uri=jdbc:postgresql://postgres_catalog:5432/iceberg_catalog
     * Credentials for PostgreSQL.
-    * spark.sql.catalog.iceberg_jdbc.driver=org.postgresql.Driver
-    * spark.sql.catalog.iceberg_jdbc.warehouse=s3a://iceberg-warehouse/: Specifies the root path in MinIO where Spark will write data for tables under this catalog.
+    * spark.sql.catalog.iceberg_catalog.driver=org.postgresql.Driver
+    * spark.sql.catalog.iceberg_catalog.warehouse=s3a://iceberg-warehouse/: Specifies the root path in MinIO where Spark will write data for tables under this catalog.
   * S3/MinIO Configuration:
     * spark.hadoop.fs.s3a.endpoint=<http://minio:9000>
     * S3 credentials (admin/password).
     * path.style.access=true (for MinIO).
     * SSL disabled for MinIO.
   * --packages: This tells Spark to download the necessary Iceberg, Hadoop-AWS (for S3A), and PostgreSQL JDBC driver dependencies.
-    * org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.5.0 (Adjust version based on Spark and desired Iceberg version. 1.5.0 is recent for Spark 3.5)
+    * org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.9.1 (Adjust version based on Spark and desired Iceberg version. 1.5.0 is recent for Spark 3.5)
     * org.apache.hadoop:hadoop-aws:3.3.4 (Ensure compatibility with Spark's Hadoop version. Bitnami Spark 3.5 usually uses Hadoop 3.3.x)
     * org.postgresql:postgresql:42.6.0 (PostgreSQL JDBC driver)
 * Network: Explicitly defined datalakehouse_network and assigned all services to it to ensure consistent name resolution.
@@ -822,14 +822,14 @@ This file provides default configurations for Spark applications, including thos
 spark.sql.extensions                       org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
 
 # --- Default Iceberg Catalog (using JDBC) ---
-# This defines a catalog named 'iceberg_jdbc'
-spark.sql.catalog.iceberg_jdbc             org.apache.iceberg.spark.SparkCatalog
-spark.sql.catalog.iceberg_jdbc.catalog-impl org.apache.iceberg.jdbc.JdbcCatalog
-spark.sql.catalog.iceberg_jdbc.uri         jdbc:postgresql://postgres_catalog:5432/iceberg_catalog
-spark.sql.catalog.iceberg_jdbc.jdbc.user   iceberg
-spark.sql.catalog.iceberg_jdbc.jdbc.password icebergpassword
-spark.sql.catalog.iceberg_jdbc.driver      org.postgresql.Driver
-spark.sql.catalog.iceberg_jdbc.warehouse   s3a://iceberg-warehouse/
+# This defines a catalog named 'iceberg_catalog'
+spark.sql.catalog.iceberg_catalog             org.apache.iceberg.spark.SparkCatalog
+spark.sql.catalog.iceberg_catalog.catalog-impl org.apache.iceberg.jdbc.JdbcCatalog
+spark.sql.catalog.iceberg_catalog.uri         jdbc:postgresql://postgres_catalog:5432/iceberg_catalog
+spark.sql.catalog.iceberg_catalog.jdbc.user   iceberg
+spark.sql.catalog.iceberg_catalog.jdbc.password icebergpassword
+spark.sql.catalog.iceberg_catalog.driver      org.postgresql.Driver
+spark.sql.catalog.iceberg_catalog.warehouse   s3a://iceberg-warehouse/
 
 # --- S3A Configuration for MinIO (needed by Spark workers and driver) ---
 spark.hadoop.fs.s3a.endpoint               http://minio:9000
@@ -888,7 +888,7 @@ except Exception as e:
     spark = None
 
 # Define the catalog name we configured
-iceberg_catalog_name = "iceberg_jdbc" # Must match spark.sql.catalog.iceberg_jdbc in config
+iceberg_catalog_name = "iceberg_catalog" # Must match spark.sql.catalog.iceberg_catalog in config
 
 # Cell 2: Create a Database/Schema in Iceberg using Spark
 if spark:
@@ -1408,12 +1408,12 @@ services:
       PYSPARK_SUBMIT_ARGS: >-
         --master spark://spark-master:7077
         --conf spark.sql.extensions=org.apache.iceberg.spark.extensions.IcebergSparkSessionExtensions
-        --conf spark.sql.catalog.iceberg_jdbc.type=jdbc
-        --conf spark.sql.catalog.iceberg_jdbc.uri=jdbc:postgresql://postgres_catalog:5432/iceberg_catalog
-        --conf spark.sql.catalog.iceberg_jdbc.jdbc.user=iceberg
-        --conf spark.sql.catalog.iceberg_jdbc.jdbc.password=icebergpassword
-        --conf spark.sql.catalog.iceberg_jdbc.driver=org.postgresql.Driver
-        --conf spark.sql.catalog.iceberg_jdbc.warehouse=s3a://iceberg-warehouse/
+        --conf spark.sql.catalog.iceberg_catalog.type=jdbc
+        --conf spark.sql.catalog.iceberg_catalog.uri=jdbc:postgresql://postgres_catalog:5432/iceberg_catalog
+        --conf spark.sql.catalog.iceberg_catalog.jdbc.user=iceberg
+        --conf spark.sql.catalog.iceberg_catalog.jdbc.password=icebergpassword
+        --conf spark.sql.catalog.iceberg_catalog.driver=org.postgresql.Driver
+        --conf spark.sql.catalog.iceberg_catalog.warehouse=s3a://iceberg-warehouse/
         --conf spark.hadoop.fs.s3a.endpoint=http://minio:9000
         --conf spark.hadoop.fs.s3a.access.key=admin
         --conf spark.hadoop.fs.s3a.secret.key=password
@@ -1537,9 +1537,9 @@ from pyflink.table.types import RowType, ecológicaRecordType # For schema defin
 MINIO_ENDPOINT = "http://minio:9000"
 MINIO_ACCESS_KEY = "admin"
 MINIO_SECRET_KEY = "password"
-ICEBERG_JDBC_URL = "jdbc:postgresql://postgres_catalog:5432/iceberg_catalog"
-ICEBERG_JDBC_USER = "iceberg"
-ICEBERG_JDBC_PASSWORD = "icebergpassword"
+iceberg_catalog_URL = "jdbc:postgresql://postgres_catalog:5432/iceberg_catalog"
+iceberg_catalog_USER = "iceberg"
+iceberg_catalog_PASSWORD = "icebergpassword"
 ICEBERG_WAREHOUSE_PATH = "s3a://iceberg-warehouse/" # Root for this catalog
 
 # Catalog name for Flink to use
@@ -1585,9 +1585,9 @@ CREATE CATALOG {FLINK_ICEBERG_CATALOG_NAME}
 WITH (
     'type'='iceberg',
     'catalog-type'='jdbc',
-    'uri'='{ICEBERG_JDBC_URL}',
-    'jdbc.user'='{ICEBERG_JDBC_USER}',
-    'jdbc.password'='{ICEBERG_JDBC_PASSWORD}',
+    'uri'='{iceberg_catalog_URL}',
+    'jdbc.user'='{iceberg_catalog_USER}',
+    'jdbc.password'='{iceberg_catalog_PASSWORD}',
     'warehouse'='{ICEBERG_WAREHOUSE_PATH}',
     'property-version'='1'
 )
@@ -1749,7 +1749,7 @@ except Exception as e:
 # For example, to see snapshots, you'd use Trino or Spark as in other notebooks.
 print("\nTo inspect Iceberg table metadata (snapshots, files, etc.):")
 print("Use Trino: SELECT * FROM iceberg.flink_schema.\"sensor_readings$history\"")
-print("Or Spark: spark.sql(f\"SELECT * FROM iceberg_jdbc.flink_schema.sensor_readings.history\").show()")
+print("Or Spark: spark.sql(f\"SELECT * FROM iceberg_catalog.flink_schema.sensor_readings.history\").show()")
 
 
 # Cell 12: Compaction / Maintenance
@@ -1759,7 +1759,7 @@ print("Or Spark: spark.sql(f\"SELECT * FROM iceberg_jdbc.flink_schema.sensor_rea
 # You would run compaction using Spark or the Iceberg API against the tables Flink uses.
 print("\nData compaction for Iceberg tables used by Flink would typically be done by Spark or Iceberg Java API.")
 # Example Spark command from notebook 02:
-# spark.sql(f"CALL iceberg_jdbc.system.rewrite_data_files(table => 'flink_schema.sensor_readings', strategy => 'sort')").show()
+# spark.sql(f"CALL iceberg_catalog.system.rewrite_data_files(table => 'flink_schema.sensor_readings', strategy => 'sort')").show()
 
 # Cell 13: Schema Evolution (Example: Add a new column via Flink SQL)
 # Flink supports schema evolution for Iceberg tables.
