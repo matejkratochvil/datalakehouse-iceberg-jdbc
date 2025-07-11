@@ -14,7 +14,7 @@ from pyflink.table.types import RowType, ecológicaRecordType # For schema defin
 MINIO_ENDPOINT = "http://minio:9000"
 MINIO_ACCESS_KEY = "admin"
 MINIO_SECRET_KEY = "password"
-ICEBERG_JDBC_URL = "jdbc:postgresql://postgres_catalog:5432/iceberg_catalog"
+ICEBERG_JDBC_URL = "jdbc:postgresql://postgres:5432/iceberg_catalog"
 ICEBERG_JDBC_USER = "iceberg"
 ICEBERG_JDBC_PASSWORD = "icebergpassword"
 ICEBERG_WAREHOUSE_PATH = "s3a://iceberg-warehouse/" # Root for this catalog

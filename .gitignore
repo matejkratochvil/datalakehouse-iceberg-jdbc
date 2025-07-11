@@ -20,3 +20,9 @@ notebooks/testdata/consuption/ConsumptionIndustry100.json
 /.idea/
 /.vscode/
 notebooks/testdata/
+notebooks/iceberg-warehouse/
+notebooks/spark-warehouse/
+notebooks/.ipynb_checkpoints!
+wip/
+old/
+

@@ -154,6 +154,7 @@ services:
         --conf spark.hadoop.fs.s3a.secret.key=password
         --conf spark.hadoop.fs.s3a.path.style.access=true
         --conf spark.hadoop.fs.s3a.connection.ssl.enabled=false
+        --conf spark.hadoop.fs.s3a.endpoint.region=eu-central-1
         --conf spark.driver.extraJavaOptions="-Daws.region=eu-central-1 -Daws.overrideDefaultRegion=true"
         --conf spark.executor.extraJavaOptions="-Daws.region=eu-central-1 -Daws.overrideDefaultRegion=true"
         --packages org.apache.iceberg:iceberg-spark-runtime-3.5_2.12:1.9.1,org.apache.hadoop:hadoop-aws:3.3.4,org.postgresql:postgresql:42.6.0,org.apache.spark:spark-avro_2.12:3.5.6
@@ -167,7 +168,7 @@ services:
       - datalakehouse_network
 
   flink-jobmanager:
-    build: ./flink
+    build: ./config/flink
     ports:
       - "8081:8081"
     command: jobmanager
@@ -182,7 +183,7 @@ services:
       - datalakehouse_network
 
   flink-taskmanager:
-    build: ./flink
+    build: ./config/flink
     command: taskmanager
     scale: 1
     environment:
